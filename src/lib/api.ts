@@ -1,5 +1,5 @@
 export async function apiGet<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, { cache: "no-store", ...init });
+  const res = await fetch(absoluteUrl(url), { cache: "no-store", ...init });
   if (!res.ok) {
     const data = await safeJson(res);
     throw new Error(data?.error || `GET ${url} failed: ${res.status}`);
@@ -8,7 +8,7 @@ export async function apiGet<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export async function apiPost<T>(url: string, body: unknown, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
+  const res = await fetch(absoluteUrl(url), {
     method: "POST",
     headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
     body: JSON.stringify(body),
@@ -34,5 +34,13 @@ async function safeJson(res: Response) {
   } catch {
     return null;
   }
+}
+
+export function absoluteUrl(path: string) {
+  if (path.startsWith("http")) return path;
+  const base =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  return new URL(path, base).toString();
 }
 

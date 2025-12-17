@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { ContactForm } from "@/components/contacts/ContactForm";
-import { DataTable } from "@/components/common/DataTable";
+import { ContactsTable } from "@/components/contacts/ContactsTable";
+import { absoluteUrl } from "@/lib/api";
 
 type ContactRow = {
   id: string;
@@ -10,7 +10,7 @@ type ContactRow = {
 };
 
 async function fetchContacts(): Promise<ContactRow[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/contacts`, { cache: "no-store" });
+  const res = await fetch(absoluteUrl("/api/contacts"), { cache: "no-store" });
   if (!res.ok) return [];
   const data = await res.json();
   return data.items ?? [];
@@ -29,21 +29,7 @@ export default async function ContactsPage() {
       </div>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <div className="card">
-          <DataTable
-            data={contacts}
-            empty="Aucun contact"
-            columns={[
-              {
-                header: "Nom",
-                render: (row: ContactRow) => (
-                  <Link href={`/contacts/${row.id}`}>
-                    {row.firstName} {row.lastName}
-                  </Link>
-                ),
-              },
-              { header: "Entreprise", render: () => "—" },
-            ]}
-          />
+          <ContactsTable data={contacts} />
         </div>
         <div className="card">
           <h2 className="text-lg font-semibold">Créer un contact</h2>

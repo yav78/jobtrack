@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { CompanyForm } from "@/components/companies/CompanyForm";
-import { DataTable } from "@/components/common/DataTable";
+import { CompaniesTable } from "@/components/companies/CompaniesTable";
 import type { CompanyDTO } from "@/lib/dto/company";
+import { absoluteUrl } from "@/lib/api";
 
 async function fetchCompanies() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/companies`, {
+  const res = await fetch(absoluteUrl("/api/companies"), {
     cache: "no-store",
   });
   if (!res.ok) return [];
@@ -25,15 +25,7 @@ export default async function CompaniesPage() {
       </div>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <div className="card">
-          <DataTable
-            data={companies}
-            empty="Aucune entreprise"
-            columns={[
-              { header: "Nom", render: (row: CompanyDTO) => <Link href={`/companies/${row.id}`}>{row.name}</Link> },
-              { header: "Type", render: (row: CompanyDTO) => row.typeCode ?? "-" },
-              { header: "Site", render: (row: CompanyDTO) => row.website ?? "-" },
-            ]}
-          />
+          <CompaniesTable data={companies} />
         </div>
         <div className="card">
           <h2 className="text-lg font-semibold">Créer une entreprise</h2>

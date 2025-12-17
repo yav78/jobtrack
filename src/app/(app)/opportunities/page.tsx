@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { OpportunityForm } from "@/components/opportunities/OpportunityForm";
-import { DataTable } from "@/components/common/DataTable";
+import { OpportunitiesTable } from "@/components/opportunities/OpportunitiesTable";
 import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
 import { apiGet } from "@/lib/api";
 
@@ -25,14 +24,7 @@ export default async function OpportunitiesPage() {
       </div>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <div className="card">
-          <DataTable
-            data={opportunities}
-            empty="Aucune opportunité"
-            columns={[
-              { header: "Titre", render: (row: WorkOpportunityDTO) => <Link href={`/opportunities/${row.id}`}>{row.title}</Link> },
-              { header: "Description", render: (row: WorkOpportunityDTO) => row.description ?? "-" },
-            ]}
-          />
+          <OpportunitiesTable data={opportunities} />
         </div>
         <div className="card">
           <h2 className="text-lg font-semibold">Créer une opportunité</h2>
