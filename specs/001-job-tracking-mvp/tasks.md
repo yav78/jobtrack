@@ -113,14 +113,14 @@ Implémentation :
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T062 [P] Ajouter hooks/fetchers mutualisés pour API (utils `src/lib/api.ts`) + gestion de pagination/search
-- [ ] T063 [P] Ajouter loading/skeleton + empty states sur listes (companies, contacts, opportunities) dans `src/components/common/*`
-- [ ] T064 Ajouter documentation API (README section) avec exemples payloads pour endpoints principaux
-- [ ] T065 Ajouter script `npm run db:seed` et docs usage (dev)
-- [ ] T066 Ajouter vérifications accessibilité de base (labels, focus, contrastes) dans composants critiques
-- [ ] T067 Stabiliser erreurs 409/422 : mapping front (toasts) pour forms principaux
-- [ ] T068 [P] Tests E2E smoke (Playwright) parcours complet MVP dans `src/tests/e2e/smoke.spec.ts` (optionnel si temps)
-- [ ] T069 Mise à jour README (setup, env, scripts, seed, endpoints)
+- [x] T062 [P] Ajouter hooks/fetchers mutualisés pour API (utils `src/lib/api.ts`) + gestion de pagination/search
+- [x] T063 [P] Ajouter loading/skeleton + empty states sur listes (companies, contacts, opportunities) dans `src/components/common/*`
+- [x] T064 Ajouter documentation API (README section) avec exemples payloads pour endpoints principaux
+- [x] T065 Ajouter script `npm run db:seed` et docs usage (dev)
+- [x] T066 Ajouter vérifications accessibilité de base (labels, focus, contrastes) dans composants critiques
+- [x] T067 Stabiliser erreurs 409/422 : mapping front (toasts) pour forms principaux
+- [x] T068 [P] Tests E2E smoke (Playwright) parcours complet MVP dans `src/tests/e2e/smoke.spec.ts` (optionnel si temps)
+- [x] T069 Mise à jour README (setup, env, scripts, seed, endpoints)
 
 ## Dependencies & Execution Order
 

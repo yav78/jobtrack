@@ -36,6 +36,7 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
+      aria-label="Changer le thème"
       className="rounded-md border px-3 py-1 text-sm transition hover:bg-neutral-800 hover:text-white dark:border-neutral-700 dark:hover:bg-neutral-200 dark:hover:text-neutral-900"
     >
       {theme === "dark" ? "Mode clair" : "Mode sombre"}

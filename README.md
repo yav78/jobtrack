@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Jobtrack - Mini CRM de recherche d'emploi
 
-## Getting Started
+Suivi des entreprises, contacts, canaux, opportunités et entretiens.
 
-First, run the development server:
+## Stack
+- Next.js (App Router) + route handlers API
+- Prisma + PostgreSQL
+- TailwindCSS (dark mode)
+- Zod pour les validateurs
+- Vitest pour tests unitaires/intégration
 
+## Setup
 ```bash
+npm install
+cp env.example .env
+docker compose up -d db
+npx prisma migrate dev
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Env attendues (`.env`) :
+- `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/jobtrack`
+- `AUTH_DEMO_USER_ID=00000000-0000-0000-0000-000000000001`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
+- `npm run dev` : serveur Next
+- `npm run lint` : ESLint
+- `npm run test` : Vitest (unit + intégration + smoke)
+- `npm run db:seed` : seed (user demo, types, données démo)
+- `npm run build` / `npm start` : prod
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Endpoints principaux (REST)
+- Companies : `GET/POST /api/companies`, `GET/PATCH/DELETE /api/companies/:id`, `POST /api/companies/:id/locations`, `PATCH/DELETE /api/locations/:id`
+- Contacts : `GET/POST /api/contacts`, `GET/PATCH/DELETE /api/contacts/:id`, `POST /api/contacts/:id/channels`, `PATCH/DELETE /api/channels/:id`
+- Opportunities : `GET/POST /api/opportunities`, `GET/PATCH/DELETE /api/opportunities/:id`
+- Entretiens : `GET/POST /api/entretiens`, `GET/PATCH/DELETE /api/entretiens/:id`, `POST /api/entretiens/:id/contacts`, `DELETE /api/entretiens/:id/contacts?contactId=...`
 
-## Learn More
+Convention : toutes les routes attendent `X-User-Id` (fallback user demo).
 
-To learn more about Next.js, take a look at the following resources:
+## Tests
+```bash
+npm run test   # Vitest
+```
+Suites couvertes : validateurs, API companies/contacts/opportunities/entretiens, smoke.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## UI (pages clés)
+- `/companies`, `/contacts`, `/opportunities`, `/entretiens/new`, `/entretiens/[id]`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+- Uniques partielles gérées via migration SQL (location primaire par company, channel primaire par type).
+- Dark mode par défaut, toggle dans l'AppShell.
