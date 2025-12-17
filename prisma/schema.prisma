@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String            @id @default(uuid()) @db.Uuid
+  fullName  String
+  email     String            @unique
+  companies Company[]
+  opportunities WorkOpportunity[]
+  entretiens Entretien[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model CompanyType {
+  code     String    @id
+  label    String
+  companies Company[]
+}
+
+model ChannelType {
+  code            String           @id
+  label           String
+  contactChannels ContactChannel[]
+}
+
+model Company {
+  id        String     @id @default(uuid()) @db.Uuid
+  name      String
+  typeCode  String
+  website   String?
+  notes     String?
+  userId    String     @db.Uuid
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyType CompanyType @relation(fields: [typeCode], references: [code])
+  locations   Location[]
+  contacts    Contact[]
+  opportunities WorkOpportunity[]
+
+  @@unique([userId, name])
+}
+
+model Location {
+  id             String   @id @default(uuid()) @db.Uuid
+  companyId      String   @db.Uuid
+  label          String
+  addressLine1   String
+  addressLine2   String?
+  zipCode        String
+  city           String
+  country        String
+  isPrimary      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contacts Contact[] @relation("ContactLocation")
+
+  @@index([companyId])
+}
+
+model Contact {
+  id                String            @id @default(uuid()) @db.Uuid
+  companyId         String            @db.Uuid
+  firstName         String
+  lastName          String
+  roleTitle         String?
+  notes             String?
+  basedAtLocationId String?           @db.Uuid
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  company  Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  basedAt  Location? @relation("ContactLocation", fields: [basedAtLocationId], references: [id])
+  channels ContactChannel[]
+  entretienLinks EntretienContact[]
+
+  @@index([companyId])
+}
+
+model ContactChannel {
+  id              String    @id @default(uuid()) @db.Uuid
+  contactId       String    @db.Uuid
+  channelTypeCode String
+  value           String
+  label           String?
+  isPrimary       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  contact     Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  channelType ChannelType @relation(fields: [channelTypeCode], references: [code])
+  entretiens  Entretien[]
+
+  @@index([contactId])
+  @@index([channelTypeCode])
+}
+
+model WorkOpportunity {
+  id        String     @id @default(uuid()) @db.Uuid
+  title     String
+  description String?
+  companyId String?    @db.Uuid
+  userId    String     @db.Uuid
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  company Company? @relation(fields: [companyId], references: [id])
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entretiens Entretien[]
+
+  @@index([userId])
+  @@index([companyId])
+}
+
+model Entretien {
+  id               String     @id @default(uuid()) @db.Uuid
+  date             DateTime
+  userId           String     @db.Uuid
+  workOpportunityId String    @db.Uuid
+  contactChannelId String     @db.Uuid
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workOpportunity WorkOpportunity @relation(fields: [workOpportunityId], references: [id], onDelete: Cascade)
+  contactChannel  ContactChannel  @relation(fields: [contactChannelId], references: [id])
+  contacts        EntretienContact[]
+
+  @@index([userId])
+  @@index([workOpportunityId])
+  @@index([contactChannelId])
+}
+
+model EntretienContact {
+  entretienId String @db.Uuid
+  contactId   String @db.Uuid
+
+  entretien Entretien @relation(fields: [entretienId], references: [id], onDelete: Cascade)
+  contact   Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@id([entretienId, contactId])
+}
+

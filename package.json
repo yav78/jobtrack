@@ -1,0 +1,38 @@
+{
+  "name": "jobtrack",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "format": "prettier -w .",
+    "db:seed": "prisma db seed",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.1",
+    "next": "16.0.10",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.0.16",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.10",
+    "prettier": "^3.4.2",
+    "prisma": "^6.0.1",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^4.0.16"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
+}

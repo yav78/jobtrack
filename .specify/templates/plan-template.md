@@ -31,7 +31,15 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Vérifier la conformité avec la constitution Jobtrack (`.specify/memory/constitution.md`) :
+
+- **I. Code Quality Standards** : Plan MUST inclure linting/formatting, structure de code claire, documentation
+- **II. Test-First Development** : Plan MUST inclure stratégie de tests TDD avec couverture ≥80% (100% pour code critique)
+- **III. Testing Standards** : Plan MUST spécifier tests unitaires, intégration, contrat, et E2E pour fonctionnalités critiques
+- **IV. User Experience Consistency** : Plan MUST vérifier cohérence UI/UX, design system, accessibilité WCAG 2.1 AA
+- **V. Performance Requirements** : Plan MUST valider objectifs de performance (<2s chargement, <200ms API p95, <500ms CRUD)
+
+**Violations** : Documenter toute exception dans la section "Complexity Tracking" ci-dessous avec justification.
 
 ## Project Structure
 
