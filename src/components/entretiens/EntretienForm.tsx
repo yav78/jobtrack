@@ -123,7 +123,7 @@ export function EntretienForm() {
           <option value="">Sélectionner</option>
           {opportunities.map((o) => (
             <option key={o.id} value={o.id}>
-              o.label
+              {o.label}
             </option>
           ))}
         </select>
