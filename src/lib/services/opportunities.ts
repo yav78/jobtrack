@@ -18,6 +18,7 @@ export async function getOpportunities(userId: string, options?: { page?: number
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
+      include: { company: { select: { id: true, name: true } } },
     }),
     prisma.workOpportunity.count({ where }),
   ]);

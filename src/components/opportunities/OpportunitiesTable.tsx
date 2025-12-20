@@ -15,6 +15,17 @@ export function OpportunitiesTable({ data }: Props) {
       empty="Aucune opportunité"
       columns={[
         { header: "Titre", render: (row) => <Link href={`/opportunities/${row.id}`}>{row.title}</Link> },
+        {
+          header: "Entreprise",
+          render: (row) =>
+            row.company ? (
+              <Link href={`/companies/${row.company.id}`} className="text-emerald-600 hover:underline">
+                {row.company.name}
+              </Link>
+            ) : (
+              "—"
+            ),
+        },
         { header: "Description", render: (row) => row.description ?? "-" },
       ]}
     />

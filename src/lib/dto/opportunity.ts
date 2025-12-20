@@ -6,5 +6,6 @@ export type WorkOpportunityDTO = {
   userId: string;
   createdAt: string;
   updatedAt: string;
+  company?: { id: string; name: string } | null;
 };
 

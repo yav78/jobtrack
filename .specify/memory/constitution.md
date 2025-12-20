@@ -1,11 +1,11 @@
 <!--
 Sync Impact Report:
-Version change: N/A → 1.0.0 (initial creation)
-Modified principles: N/A (new constitution)
-Added sections: Core Principles (5 principles), Code Quality Standards, User Experience Standards, Performance Requirements, Governance
+Version change: 1.0.0 → 1.1.0 (MINOR - addition of new principle)
+Modified principles: N/A
+Added sections: Core Principles VI (Service/Controller Separation)
 Removed sections: N/A
 Templates requiring updates:
-  ✅ plan-template.md - Constitution Check section will reference new principles
+  ✅ plan-template.md - Constitution Check section will reference new principle VI
   ✅ spec-template.md - No changes needed (already generic)
   ✅ tasks-template.md - No changes needed (already generic)
 Follow-up TODOs: None
@@ -70,6 +70,30 @@ Exigences de performance non-négociables :
 
 **Rationale** : La performance impacte directement la productivité des utilisateurs. Des temps de réponse lents peuvent décourager l'utilisation régulière de l'application pour le suivi de contacts.
 
+### VI. Service/Controller Separation (NON-NEGOTIABLE)
+Séparation stricte entre logique métier (services) et routes HTTP (contrôleurs) :
+- Toute logique métier MUST être placée dans `lib/services/` et être indépendante du contexte HTTP
+- Routes API (`app/api/*/route.ts`) MUST uniquement extraire les paramètres, appeler les services, et gérer les erreurs
+- Services MUST recevoir `userId` en paramètre (jamais appeler `requireUserId()` dans les services)
+- Services MUST être réutilisables côté client et serveur
+- Validation des données (Zod) MUST être effectuée dans les services, pas dans les contrôleurs
+- Services MUST lancer des exceptions ; contrôleurs MUST les capturer et formater via `handleRouteError()`
+
+**Structure attendue** :
+```
+src/
+├── lib/services/          # Logique métier (réutilisable)
+│   ├── companies.ts
+│   ├── contacts.ts
+│   └── ...
+└── app/api/               # Routes HTTP (contrôleurs)
+    ├── companies/
+    │   └── route.ts       # Minimal : extraction → service → erreur
+    └── ...
+```
+
+**Rationale** : Cette séparation garantit la réutilisabilité du code (services utilisables côté client), améliore la testabilité (services testables indépendamment), et maintient une architecture claire avec séparation des responsabilités. Les services peuvent être appelés depuis des composants client sans passer par les routes HTTP.
+
 ## Code Quality Standards
 
 ### Linting & Formatting
@@ -130,4 +154,4 @@ Cette constitution est le document suprême pour toutes les décisions de dével
 - Constitution Check dans `plan-template.md` MUST être complété avant Phase 0
 - Toute exception aux principes MUST être explicitement justifiée et documentée
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-16 | **Last Amended**: 2025-12-16
+**Version**: 1.1.0 | **Ratified**: 2025-12-16 | **Last Amended**: 2025-12-20
