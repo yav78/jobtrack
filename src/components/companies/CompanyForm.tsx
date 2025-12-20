@@ -4,7 +4,7 @@ import { useState } from "react";
 import { pushToast } from "@/components/common/Toast";
 
 type Props = {
-  onSuccess?: () => void;
+  onSuccess?: (company?: { id: string; name: string }) => void;
 };
 
 export function CompanyForm({ onSuccess }: Props) {
@@ -29,7 +29,7 @@ export function CompanyForm({ onSuccess }: Props) {
       if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Entreprise créée" });
       setForm({ name: "", typeCode: "CLIENT_FINAL", website: "", notes: "" });
-      onSuccess?.();
+      onSuccess?.(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       pushToast({ type: "error", title: "Erreur création", description: message });

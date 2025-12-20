@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { pushToast } from "@/components/common/Toast";
+import { Modal } from "@/components/common/Modal";
+import { CompanyForm } from "@/components/companies/CompanyForm";
 import type { CompanyDTO } from "@/lib/dto/company";
 
 type Props = {
@@ -11,21 +13,31 @@ type Props = {
 export function OpportunityForm({ onSuccess }: Props) {
   const [companies, setCompanies] = useState<CompanyDTO[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
     companyId: "",
   });
 
+  const loadCompanies = async () => {
+    const res = await fetch("/api/companies");
+    if (!res.ok) return;
+    const data = await res.json();
+    setCompanies(data.items ?? []);
+  };
+
   useEffect(() => {
-    const load = async () => {
-      const res = await fetch("/api/companies");
-      if (!res.ok) return;
-      const data = await res.json();
-      setCompanies(data.items ?? []);
-    };
-    load();
+    loadCompanies();
   }, []);
+
+  const handleCompanyCreated = async (newCompanyId?: string) => {
+    await loadCompanies();
+    setShowCompanyModal(false);
+    if (newCompanyId) {
+      setForm({ ...form, companyId: newCompanyId });
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,22 +66,32 @@ export function OpportunityForm({ onSuccess }: Props) {
   };
 
   return (
-    <form className="space-y-3" onSubmit={submit}>
-      <div className="space-y-1">
-        <label className="text-sm font-medium">Entreprise</label>
-        <select
-          className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-          value={form.companyId}
-          onChange={(e) => setForm({ ...form, companyId: e.target.value })}
-        >
-          <option value="">Sélectionner (optionnel)</option>
-          {companies.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
+    <>
+      <form className="space-y-3" onSubmit={submit}>
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Entreprise</label>
+            <button
+              type="button"
+              onClick={() => setShowCompanyModal(true)}
+              className="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+            >
+              + Créer une entreprise
+            </button>
+          </div>
+          <select
+            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            value={form.companyId}
+            onChange={(e) => setForm({ ...form, companyId: e.target.value })}
+          >
+            <option value="">Sélectionner (optionnel)</option>
+            {companies.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
       <div className="space-y-1">
         <label className="text-sm font-medium">Titre</label>
         <input
@@ -88,14 +110,33 @@ export function OpportunityForm({ onSuccess }: Props) {
           rows={3}
         />
       </div>
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50"
-      >
-        {loading ? "En cours..." : "Créer"}
-      </button>
-    </form>
+        <button
+          type="submit"
+          disabled={loading}
+          className="rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {loading ? "En cours..." : "Créer"}
+        </button>
+      </form>
+      <Modal open={showCompanyModal} title="Créer une entreprise" onClose={() => setShowCompanyModal(false)}>
+        <CompanyForm
+          onSuccess={async () => {
+            const res = await fetch("/api/companies");
+            if (res.ok) {
+              const data = await res.json();
+              const newCompanies = data.items ?? [];
+              setCompanies(newCompanies);
+              // Sélectionner la dernière entreprise créée
+              if (newCompanies.length > 0) {
+                const lastCompany = newCompanies[0]; // Les entreprises sont triées par createdAt desc
+                setForm({ ...form, companyId: lastCompany.id });
+              }
+            }
+            setShowCompanyModal(false);
+          }}
+        />
+      </Modal>
+    </>
   );
 }
 

@@ -24,3 +24,4 @@ export function CompaniesTable({ data }: Props) {
 
 
 
+
