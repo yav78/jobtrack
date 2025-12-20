@@ -1,18 +1,26 @@
+
 import { notFound } from "next/navigation";
 import { Tabs } from "@/components/common/Tabs";
 import { LocationForm } from "@/components/companies/LocationForm";
 import type { CompanyDTO, LocationDTO } from "@/lib/dto/company";
+import { getCompany } from "@/app/api/companies/[id]/route";
+
 
 async function fetchCompany(id: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/companies/${id}`, {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+  console.log("baseUrl", baseUrl);
+  const res = await fetch(`${baseUrl}/api/companies/${id}`, {
     cache: "no-store",
   });
   if (!res.ok) return null;
   return res.json();
 }
 
-export default async function CompanyDetail({ params }: { params: { id: string } }) {
-  const company: (CompanyDTO & { locations?: LocationDTO[] }) | null = await fetchCompany(params.id);
+export default async function CompanyDetail(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
+  // const { company, setCompany } = useState<CompanyDTO & { locations?: LocationDTO[] } | null>(null);
+  const company: (CompanyDTO & { locations?: LocationDTO[] }) | null = await getCompany(id); // await fetchCompany(id);
+
   if (!company) return notFound();
 
   return (
@@ -24,7 +32,7 @@ export default async function CompanyDetail({ params }: { params: { id: string }
         </div>
       </div>
       <div className="card space-y-4">
-        <Tabs tabs={[{ key: "locations", label: "Lieux" }, { key: "contacts", label: "Contacts" }]} activeKey="locations" onChange={() => {}} />
+        <Tabs tabs={[{ key: "locations", label: "Lieux" }, { key: "contacts", label: "Contacts" }]} activeKey="locations"  />
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <h3 className="text-sm font-semibold">Lieux</h3>

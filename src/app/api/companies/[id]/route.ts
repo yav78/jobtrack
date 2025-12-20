@@ -3,6 +3,15 @@ import { companyUpdateSchema } from "@/lib/validators/company";
 import { jsonOk } from "@/lib/errors/response";
 import { handleRouteError, requireUserId } from "@/lib/api-helpers";
 
+export async function getCompany(id : string) {
+  const userId = await requireUserId();
+  const company = await prisma.company.findFirst({
+    where: { id, userId },
+    include: { locations: true, contacts: true },
+  });
+  return company;
+}
+
 export async function GET(_: Request, { params }: { params: { id: string } }) {
   try {
     const userId = await requireUserId();
