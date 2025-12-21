@@ -6,6 +6,7 @@ import { Tabs } from "@/components/common/Tabs";
 import { LocationForm } from "@/components/companies/LocationForm";
 import type { CompanyDTO, LocationDTO } from "@/lib/dto/company";
 import type { ContactDTO } from "@/lib/dto/contact";
+import { useCompanyTypes } from "@/hooks/useCompanyTypes";
 
 async function fetchCompany(id: string) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
@@ -22,6 +23,7 @@ export default function CompanyDetail() {
   const [company, setCompany] = useState<(CompanyDTO & { locations?: LocationDTO[]; contacts?: ContactDTO[] }) | null>(null);
   const [activeTab, setActiveTab] = useState("locations");
   const [loading, setLoading] = useState(true);
+  const { getLabel } = useCompanyTypes();
 
   useEffect(() => {
     async function loadCompany() {
@@ -45,7 +47,7 @@ export default function CompanyDetail() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{company.name}</h1>
-          <p className="text-sm text-neutral-600 dark:text-neutral-300">Type: {company.typeCode}</p>
+          <p className="text-sm text-neutral-600 dark:text-neutral-300">Type: {getLabel(company.typeCode)}</p>
         </div>
       </div>
       <div className="card space-y-4">
