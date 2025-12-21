@@ -31,14 +31,6 @@ export function OpportunityForm({ onSuccess }: Props) {
     loadCompanies();
   }, []);
 
-  const handleCompanyCreated = async (newCompanyId?: string) => {
-    await loadCompanies();
-    setShowCompanyModal(false);
-    if (newCompanyId) {
-      setForm({ ...form, companyId: newCompanyId });
-    }
-  };
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);

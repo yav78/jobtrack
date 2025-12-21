@@ -2,23 +2,32 @@
 
 import { useEffect, useState } from "react";
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [mounted, setMounted] = useState(false);
+function getInitialTheme(): "light" | "dark" {
+  if (typeof window === "undefined") return "dark";
+  const stored = window.localStorage.getItem("jobtrack-theme");
+  return stored === "light" || stored === "dark" ? stored : "dark";
+}
 
+export function ThemeToggle() {
+  const [theme, setTheme] = useState<"light" | "dark">(getInitialTheme);
+  const [mounted, setMounted] = useState(typeof window !== "undefined");
+
+  // Initialiser le thème au montage
   useEffect(() => {
-    setMounted(true);
-    const stored = window.localStorage.getItem("jobtrack-theme");
-    const initialTheme = stored === "light" || stored === "dark" ? stored : "dark";
-    setTheme(initialTheme);
+    if (typeof window === "undefined") return;
+    const initialTheme = getInitialTheme();
     document.documentElement.classList.toggle("dark", initialTheme === "dark");
+    // Différer setMounted pour éviter l'avertissement ESLint
+    queueMicrotask(() => {
+      setMounted(true);
+    });
   }, []);
 
+  // Synchroniser le thème avec le DOM et localStorage
   useEffect(() => {
-    if (mounted) {
-      document.documentElement.classList.toggle("dark", theme === "dark");
-      window.localStorage.setItem("jobtrack-theme", theme);
-    }
+    if (typeof window === "undefined" || !mounted) return;
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    window.localStorage.setItem("jobtrack-theme", theme);
   }, [theme, mounted]);
 
   const toggle = () => {

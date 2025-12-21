@@ -28,11 +28,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-neutral-950`}>
         <ToastProvider />
-        <div className="flex min-h-screen bg-background text-foreground">
+        <div className="flex min-h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100">
           <SideBar />
-          <div className="flex flex-1 flex-col">
+          <div className="flex flex-1 flex-col bg-white dark:bg-neutral-950">
             <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-950">
               <div className="text-base font-semibold">Mini CRM Recherche d&apos;emploi</div>
               <div className="flex items-center gap-3">
