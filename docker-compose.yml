@@ -1,6 +1,26 @@
 version: "3.9"
 
 services:
+  app:
+    image: jobtrack:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/jobtrack
+      AUTH_DEMO_USER_ID: ${AUTH_DEMO_USER_ID:-00000000-0000-0000-0000-000000000001}
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
+      NODE_ENV: production
+      PORT: 3000
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
   db:
     image: postgres:16-alpine
     container_name: jobtrack-db
@@ -12,15 +32,13 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # - db_data:/var/lib/postgresql/data
-      - ../db_data_postgres_jobtrack:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d jobtrack"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-# volumes:
-#   db_data:
-#     driver: local
-
+volumes:
+  db_data:
+    driver: local
