@@ -1,24 +1,54 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
-import type { EntretienDTO } from "@/lib/dto/entretien";
-import { apiGet } from "@/lib/api";
+import { OpportunityTimeline } from "@/components/opportunities/OpportunityTimeline";
+import { ActionPageClient } from "@/components/opportunities/ActionPageClient";
+import { ActionTypeFilterClient } from "@/components/opportunities/ActionTypeFilterClient";
+import { absoluteUrl } from "@/lib/api";
 
-type OpportunityDetail = WorkOpportunityDTO & {
-  entretiens?: (EntretienDTO & { contactChannel?: { value: string }; contacts?: { contactId: string }[] })[];
-};
+// Désactiver le cache pour cette page dynamique
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-async function fetchOpportunity(id: string): Promise<OpportunityDetail | null> {
+async function fetchOpportunity(id: string): Promise<WorkOpportunityDTO | null> {
   try {
-    return await apiGet<OpportunityDetail>(`/api/opportunities/${id}`);
-  } catch {
+    const res = await fetch(absoluteUrl(`/api/opportunities/${id}`), { 
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching opportunity:", error);
     return null;
   }
 }
 
-export default async function OpportunityDetailPage({ params }: { params: { id: string } }) {
-  const opp = await fetchOpportunity(params.id);
+export default async function OpportunityDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }> | { id: string };
+  searchParams?: Promise<{ type?: string }> | { type?: string };
+}) {
+  const resolvedParams = params instanceof Promise ? await params : params;
+  const resolvedSearchParams = searchParams instanceof Promise ? await searchParams : searchParams;
+  
+  if (!resolvedParams?.id) {
+    return notFound();
+  }
+  
+  // Forcer le re-fetch sans cache
+  const opp = await fetchOpportunity(resolvedParams.id);
   if (!opp) return notFound();
+  
+  // Vérifier que l'ID correspond bien
+  if (opp.id !== resolvedParams.id) {
+    console.error(`ID mismatch: expected ${resolvedParams.id}, got ${opp.id}`);
+    return notFound();
+  }
+
+  const type = resolvedSearchParams?.type;
 
   return (
     <div className="space-y-4">
@@ -26,43 +56,24 @@ export default async function OpportunityDetailPage({ params }: { params: { id: 
         <div>
           <h1 className="text-2xl font-semibold">{opp.title}</h1>
           {opp.description && <p className="text-sm text-neutral-600 dark:text-neutral-300">{opp.description}</p>}
+          {opp.company && (
+            <p className="text-sm text-neutral-600 dark:text-neutral-300">
+              Entreprise: <Link href={`/companies/${opp.company.id}`} className="text-emerald-600 hover:underline dark:text-emerald-400">{opp.company.name}</Link>
+            </p>
+          )}
         </div>
-        <Link
-          href="/entretiens/new"
-          className="rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700"
-        >
-          Nouvel entretien
-        </Link>
       </div>
 
-      <div className="card space-y-3">
-        <h3 className="text-sm font-semibold">Entretiens</h3>
-        <ul className="space-y-2 text-sm">
-          {opp.entretiens?.length ? (
-            opp.entretiens.map((e) => (
-              <li key={e.id} className="rounded border border-neutral-200 p-2 dark:border-neutral-800">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium">{new Date(e.date).toLocaleString()}</div>
-                    <div className="text-neutral-600 dark:text-neutral-300">
-                      Canal: {e.contactChannel?.value ?? "-"} · Contacts: {e.contacts?.length ?? 0}
-                    </div>
-                  </div>
-                  <Link
-                    href={`/entretiens/${e.id}`}
-                    className="text-emerald-600 hover:underline dark:text-emerald-400"
-                  >
-                    Voir
-                  </Link>
-                </div>
-              </li>
-            ))
-          ) : (
-            <div className="text-neutral-500">Aucun entretien</div>
-          )}
-        </ul>
+      <div className="card space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Timeline des actions</h3>
+          <ActionPageClient opportunityId={resolvedParams.id} companyId={opp.companyId} />
+        </div>
+
+        <ActionTypeFilterClient opportunityId={resolvedParams.id} />
+
+        <OpportunityTimeline opportunityId={resolvedParams.id} type={type} />
       </div>
     </div>
   );
 }
-

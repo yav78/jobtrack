@@ -2,21 +2,23 @@ import { jsonError, jsonOk } from "@/lib/errors/response";
 import { handleRouteError, requireUserId } from "@/lib/api-helpers";
 import { updateLocation, deleteLocation } from "@/lib/services/locations";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {
     const userId = await requireUserId();
     const body = await req.json();
-    const updated = await updateLocation(params.id, userId, body);
+    const { id } = params instanceof Promise ? await params : params;
+    const updated = await updateLocation(id, userId, body);
     return jsonOk(updated);
   } catch (error) {
     return handleRouteError(error);
   }
 }
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {
     const userId = await requireUserId();
-    const result = await deleteLocation(params.id, userId);
+    const { id } = params instanceof Promise ? await params : params;
+    const result = await deleteLocation(id, userId);
     return jsonOk(result);
   } catch (error) {
     return jsonError(error);
