@@ -2,8 +2,13 @@ import { z } from "zod";
 
 const DEMO_USER_ID = "00000000-0000-0000-0000-000000000001";
 
+// Valeur par défaut factice pour le build Docker (sera remplacée au runtime)
+// Prisma utilisera directement process.env.DATABASE_URL au runtime, donc cette valeur
+// n'est utilisée que pour satisfaire la validation Zod pendant le build
+const DEFAULT_DATABASE_URL = "postgresql://build:build@localhost:5432/build";
+
 const envSchema = z.object({
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: z.string().url().default(DEFAULT_DATABASE_URL),
   AUTH_DEMO_USER_ID: z
     .string()
     .uuid()
