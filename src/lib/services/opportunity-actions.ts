@@ -25,6 +25,41 @@ type OpportunityActionWithRelations = Prisma.OpportunityActionGetPayload<{
   };
 }>;
 
+type OpportunityActionWithOpportunity = Prisma.OpportunityActionGetPayload<{
+  include: {
+    contactChannel: {
+      select: {
+        id: true;
+        value: true;
+        label: true;
+      };
+    };
+    participants: {
+      include: {
+        contact: {
+          select: {
+            id: true;
+            firstName: true;
+            lastName: true;
+          };
+        };
+      };
+    };
+    workOpportunity: {
+      select: {
+        id: true;
+        title: true;
+        company: {
+          select: {
+            id: true;
+            name: true;
+          };
+        };
+      };
+    };
+  };
+}>;
+
 export async function getOpportunityActions(
   opportunityId: string,
   userId: string,
@@ -68,6 +103,53 @@ export async function getOpportunityActions(
     orderBy: {
       occurredAt: "desc",
     },
+  });
+
+  return actions;
+}
+
+export async function getRecentOpportunityActions(
+  userId: string,
+  limit = 20
+): Promise<OpportunityActionWithOpportunity[]> {
+  const actions = await prisma.opportunityAction.findMany({
+    where: { userId },
+    include: {
+      contactChannel: {
+        select: {
+          id: true,
+          value: true,
+          label: true,
+        },
+      },
+      participants: {
+        include: {
+          contact: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+      workOpportunity: {
+        select: {
+          id: true,
+          title: true,
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      occurredAt: "desc",
+    },
+    take: limit,
   });
 
   return actions;
@@ -195,4 +277,3 @@ export async function deleteOpportunityAction(actionId: string, userId: string) 
     where: { id: actionId },
   });
 }
-

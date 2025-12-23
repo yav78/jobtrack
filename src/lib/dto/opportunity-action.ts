@@ -24,5 +24,12 @@ export type OpportunityActionDTO = {
       lastName: string;
     };
   }>;
+  workOpportunity?: {
+    id: string;
+    title: string;
+    company?: {
+      id: string;
+      name: string;
+    };
+  };
 };
-

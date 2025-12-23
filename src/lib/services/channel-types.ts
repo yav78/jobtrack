@@ -12,18 +12,18 @@ export async function updateChannelType(code: string, data: { label: string }) {
     where: { code },
     data,
   });
-  revalidateTag("refdata");
+  revalidateTag("refdata", "max");
   return updated;
 }
 
 export async function createChannelType(data: { code: string; label: string }) {
   const created = await prisma.channelType.create({ data });
-  revalidateTag("refdata");
+  revalidateTag("refdata", "max");
   return created;
 }
 
 export async function deleteChannelType(code: string) {
   await prisma.channelType.delete({ where: { code } });
-  revalidateTag("refdata");
+  revalidateTag("refdata", "max");
 }
 
