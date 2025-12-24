@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
+  { href: "/", label: "Tableau de bord" },
   { href: "/companies", label: "Entreprises" },
   { href: "/contacts", label: "Contacts" },
   { href: "/opportunities", label: "Opportunités" },
@@ -18,7 +19,10 @@ export function SideBar() {
       <div className="mb-6 text-lg font-semibold">Jobtrack</div>
       <nav className="space-y-2">
         {navItems.map((item) => {
-          const active = pathname?.startsWith(item.href);
+          const active =
+            item.href === "/"
+              ? pathname === "/"
+              : pathname?.startsWith(item.href);
           return (
             <Link
               key={item.href}
@@ -37,4 +41,3 @@ export function SideBar() {
     </aside>
   );
 }
-

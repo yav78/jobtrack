@@ -7,30 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum OpportunityActionType {
-  INTERVIEW
-  APPLIED
-  INBOUND_CONTACT
-  OUTBOUND_CONTACT
-  MESSAGE
-  CALL
-  FOLLOW_UP
-  OFFER_RECEIVED
-  OFFER_ACCEPTED
-  REJECTED
-  NOTE
-}
-
 model User {
   id            String              @id @default(uuid()) @db.Uuid
   fullName      String
   email         String              @unique
-  companies     Company[]
-  opportunities WorkOpportunity[]
-  entretiens    Entretien[]
-  actions       OpportunityAction[]
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
+  password      String
+  companies     Company[]
+  entretiens    Entretien[]
+  actions       OpportunityAction[]
+  opportunities WorkOpportunity[]
 }
 
 model CompanyType {
@@ -46,113 +33,107 @@ model ChannelType {
 }
 
 model Company {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  typeCode  String
-  website   String?
-  notes     String?
-  userId    String   @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String            @id @default(uuid()) @db.Uuid
+  name          String
+  typeCode      String
+  website       String?
+  notes         String?
+  userId        String            @db.Uuid
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
   companyType   CompanyType       @relation(fields: [typeCode], references: [code])
-  locations     Location[]
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   contacts      Contact[]
+  locations     Location[]
   opportunities WorkOpportunity[]
 
   @@unique([userId, name])
 }
 
 model Location {
-  id           String   @id @default(uuid()) @db.Uuid
-  companyId    String   @db.Uuid
+  id           String    @id @default(uuid()) @db.Uuid
+  companyId    String    @db.Uuid
   label        String
   addressLine1 String
   addressLine2 String?
   zipCode      String
   city         String
   country      String
-  isPrimary    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  contacts Contact[] @relation("ContactLocation")
+  isPrimary    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  contacts     Contact[] @relation("ContactLocation")
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@index([companyId])
 }
 
 model Contact {
-  id                String   @id @default(uuid()) @db.Uuid
-  companyId         String   @db.Uuid
+  id                String                     @id @default(uuid()) @db.Uuid
+  companyId         String                     @db.Uuid
   firstName         String
   lastName          String
   roleTitle         String?
   notes             String?
-  basedAtLocationId String?  @db.Uuid
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  company        Company                    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  basedAt        Location?                  @relation("ContactLocation", fields: [basedAtLocationId], references: [id])
-  channels       ContactChannel[]
-  entretienLinks EntretienContact[]
-  actionLinks    OpportunityActionContact[]
+  basedAtLocationId String?                    @db.Uuid
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  basedAt           Location?                  @relation("ContactLocation", fields: [basedAtLocationId], references: [id])
+  company           Company                    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  channels          ContactChannel[]
+  entretienLinks    EntretienContact[]
+  actionLinks       OpportunityActionContact[]
 
   @@index([companyId])
 }
 
 model ContactChannel {
-  id              String   @id @default(uuid()) @db.Uuid
-  contactId       String   @db.Uuid
+  id              String              @id @default(uuid()) @db.Uuid
+  contactId       String              @db.Uuid
   channelTypeCode String
   value           String
   label           String?
-  isPrimary       Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  contact     Contact             @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  channelType ChannelType         @relation(fields: [channelTypeCode], references: [code])
-  entretiens  Entretien[]
-  actions     OpportunityAction[]
+  isPrimary       Boolean             @default(false)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  channelType     ChannelType         @relation(fields: [channelTypeCode], references: [code])
+  contact         Contact             @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  entretiens      Entretien[]
+  actions         OpportunityAction[]
 
   @@index([contactId])
   @@index([channelTypeCode])
 }
 
 model WorkOpportunity {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String              @id @default(uuid()) @db.Uuid
   title       String
   description String?
-  companyId   String?  @db.Uuid
-  userId      String   @db.Uuid
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  company    Company?            @relation(fields: [companyId], references: [id])
-  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  entretiens Entretien[]
-  actions    OpportunityAction[]
+  companyId   String?             @db.Uuid
+  userId      String              @db.Uuid
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  entretiens  Entretien[]
+  actions     OpportunityAction[]
+  company     Company?            @relation(fields: [companyId], references: [id])
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([companyId])
 }
 
 model Entretien {
-  id                String   @id @default(uuid()) @db.Uuid
+  id                String             @id @default(uuid()) @db.Uuid
   date              DateTime
-  userId            String   @db.Uuid
-  workOpportunityId String   @db.Uuid
-  contactChannelId  String   @db.Uuid
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workOpportunity WorkOpportunity    @relation(fields: [workOpportunityId], references: [id], onDelete: Cascade)
-  contactChannel  ContactChannel     @relation(fields: [contactChannelId], references: [id])
-  contacts        EntretienContact[]
+  userId            String             @db.Uuid
+  workOpportunityId String             @db.Uuid
+  contactChannelId  String             @db.Uuid
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  contactChannel    ContactChannel     @relation(fields: [contactChannelId], references: [id])
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workOpportunity   WorkOpportunity    @relation(fields: [workOpportunityId], references: [id], onDelete: Cascade)
+  contacts          EntretienContact[]
 
   @@index([userId])
   @@index([workOpportunityId])
@@ -160,32 +141,30 @@ model Entretien {
 }
 
 model EntretienContact {
-  entretienId String @db.Uuid
-  contactId   String @db.Uuid
-
-  entretien Entretien @relation(fields: [entretienId], references: [id], onDelete: Cascade)
-  contact   Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  entretienId String    @db.Uuid
+  contactId   String    @db.Uuid
+  contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  entretien   Entretien @relation(fields: [entretienId], references: [id], onDelete: Cascade)
 
   @@id([entretienId, contactId])
 }
 
 model OpportunityAction {
-  id                String                @id @default(uuid()) @db.Uuid
+  id                String                     @id @default(uuid()) @db.Uuid
   occurredAt        DateTime
   type              OpportunityActionType
   notes             String?
   metadata          Json?
-  userId            String                @db.Uuid
-  workOpportunityId String                @db.Uuid
-  contactChannelId  String?               @db.Uuid
-  legacyEntretienId String?               @unique
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-
-  user            User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workOpportunity WorkOpportunity            @relation(fields: [workOpportunityId], references: [id], onDelete: Cascade)
-  contactChannel  ContactChannel?            @relation(fields: [contactChannelId], references: [id])
-  participants    OpportunityActionContact[]
+  userId            String                     @db.Uuid
+  workOpportunityId String                     @db.Uuid
+  contactChannelId  String?                    @db.Uuid
+  legacyEntretienId String?                    @unique
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  contactChannel    ContactChannel?            @relation(fields: [contactChannelId], references: [id])
+  user              User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workOpportunity   WorkOpportunity            @relation(fields: [workOpportunityId], references: [id], onDelete: Cascade)
+  participants      OpportunityActionContact[]
 
   @@index([userId])
   @@index([workOpportunityId])
@@ -194,12 +173,25 @@ model OpportunityAction {
 }
 
 model OpportunityActionContact {
-  actionId  String @db.Uuid
-  contactId String @db.Uuid
-
-  action  OpportunityAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
-  contact Contact           @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  actionId  String            @db.Uuid
+  contactId String            @db.Uuid
+  action    OpportunityAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  contact   Contact           @relation(fields: [contactId], references: [id], onDelete: Cascade)
 
   @@id([actionId, contactId])
   @@index([contactId])
+}
+
+enum OpportunityActionType {
+  INTERVIEW
+  APPLIED
+  INBOUND_CONTACT
+  OUTBOUND_CONTACT
+  MESSAGE
+  CALL
+  FOLLOW_UP
+  OFFER_RECEIVED
+  OFFER_ACCEPTED
+  REJECTED
+  NOTE
 }

@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { PrismaClient } = require("@prisma/client");
 const { randomUUID } = require("crypto");
+const bcrypt = require("bcrypt");
 
 const prisma = new PrismaClient();
 
 async function main() {
   const demoUserId = process.env.AUTH_DEMO_USER_ID || "00000000-0000-0000-0000-000000000001";
+  const demoPassword = await bcrypt.hash("demo123", 10);
 
   await prisma.user.upsert({
     where: { id: demoUserId },
-    update: { fullName: "Demo User", email: "demo@example.com" },
-    create: { id: demoUserId, fullName: "Demo User", email: "demo@example.com" },
+    update: { fullName: "Demo User", email: "demo@example.com", password: demoPassword },
+    create: { id: demoUserId, fullName: "Demo User", email: "demo@example.com", password: demoPassword },
   });
 
   const companyTypes = [

@@ -13,6 +13,7 @@ const envSchema = z.object({
     .string()
     .uuid()
     .default(DEMO_USER_ID),
+  AUTH_SECRET: z.string().min(1).default("change-me-in-production"),
   NEXT_PUBLIC_APP_NAME: z.string().min(1).default("Jobtrack"),
   NODE_ENV: z
     .enum(["development", "test", "production"])
@@ -24,6 +25,7 @@ export type Env = z.infer<typeof envSchema>;
 export const env: Env = envSchema.parse({
   DATABASE_URL: process.env.DATABASE_URL,
   AUTH_DEMO_USER_ID: process.env.AUTH_DEMO_USER_ID,
+  AUTH_SECRET: process.env.AUTH_SECRET,
   NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
   NODE_ENV: process.env.NODE_ENV,
 });
