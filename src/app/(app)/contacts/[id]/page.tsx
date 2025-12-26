@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { ChannelForm } from "@/components/contacts/ChannelForm";
-import { absoluteUrl } from "@/lib/api";
+import contactService from "@/lib/services/front/contact.service";
 
 type ContactDetail = {
   id: string;
@@ -17,15 +17,9 @@ type ContactDetail = {
   }[];
 };
 
-async function fetchContact(id: string): Promise<ContactDetail | null> {
-  const res = await fetch(absoluteUrl(`/api/contacts/${id}`), { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
-}
-
 export default async function ContactDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
   const { id } = await params;
-  const contact = await fetchContact(id);
+  const contact = await contactService.detail(id);
   if (!contact) return notFound();
 
   return (
@@ -70,4 +64,3 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
     </div>
   );
 }
-

@@ -1,24 +1,9 @@
 import { ACTION_TYPE_COLORS, ACTION_TYPE_LABELS, ACTION_TYPE_ORDER } from "@/constants/opportunityActions";
-import { absoluteUrl } from "@/lib/api";
 import type { OpportunityActionDTO } from "@/lib/dto/opportunity-action";
 import type { OpportunityActionType } from "@prisma/client";
+import { getDashboardOverview, type DashboardResponse } from "@/lib/services/front/dashboard.service";
 
-type DashboardStats = {
-  companies: number;
-  contacts: number;
-  opportunities: number;
-  entretiens: number;
-  actionsTotal: number;
-  actionsLast30Days: number;
-  actionsByType: Array<{ type: OpportunityActionType; count: number }>;
-};
-
-type DashboardResponse = {
-  stats: DashboardStats;
-  recentActions: OpportunityActionDTO[];
-};
-
-const EMPTY_STATS: DashboardStats = {
+const EMPTY_STATS: DashboardResponse["stats"] = {
   companies: 0,
   contacts: 0,
   opportunities: 0,
@@ -30,9 +15,7 @@ const EMPTY_STATS: DashboardStats = {
 
 async function fetchDashboard(): Promise<DashboardResponse> {
   try {
-    const res = await fetch(absoluteUrl("/api/dashboard/overview"), { cache: "no-store" });
-    if (!res.ok) throw new Error("Dashboard fetch failed");
-    return res.json();
+    return await getDashboardOverview();
   } catch (error) {
     console.error("Error loading dashboard:", error);
     return { stats: EMPTY_STATS, recentActions: [] };

@@ -1,19 +1,10 @@
 import { CompanyForm } from "@/components/companies/CompanyForm";
 import { CompaniesTable } from "@/components/companies/CompaniesTable";
 import type { CompanyDTO } from "@/lib/dto/company";
-import { absoluteUrl } from "@/lib/api";
-
-async function fetchCompanies() {
-  const res = await fetch(absoluteUrl("/api/companies"), {
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.items ?? [];
-}
+import companyService from "@/lib/services/front/company.service";
 
 export default async function CompaniesPage() {
-  const companies: CompanyDTO[] = await fetchCompanies();
+  const companies: CompanyDTO[] = await companyService.list();
 
   return (
     <div className="space-y-6">
@@ -35,4 +26,3 @@ export default async function CompaniesPage() {
     </div>
   );
 }
-

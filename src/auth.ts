@@ -22,6 +22,22 @@ async function getUser(email: string) {
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
   secret: env.AUTH_SECRET,
+  trustHost: true, // Permet de faire confiance à tous les hôtes (nécessaire pour Docker)
+  callbacks: {
+    ...authConfig.callbacks,
+    async jwt({ token, user }) {
+      if (user?.id) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
+  },
   providers: [
     Credentials({
       async authorize(credentials) {
@@ -49,4 +65,3 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     }),
   ],
 });
-

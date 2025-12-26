@@ -6,16 +6,8 @@ import { Tabs } from "@/components/common/Tabs";
 import { LocationForm } from "@/components/companies/LocationForm";
 import type { CompanyDTO, LocationDTO } from "@/lib/dto/company";
 import type { ContactDTO } from "@/lib/dto/contact";
+import companyService from "@/lib/services/front/company.service";
 import { useCompanyTypes } from "@/hooks/useCompanyTypes";
-
-async function fetchCompany(id: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/companies/${id}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
-  return res.json();
-}
 
 export default function CompanyDetail() {
   const params = useParams();
@@ -27,7 +19,7 @@ export default function CompanyDetail() {
 
   useEffect(() => {
     async function loadCompany() {
-      const data = await fetchCompany(id);
+      const data = await companyService.detail(id);
       setCompany(data);
       setLoading(false);
     }
@@ -108,4 +100,3 @@ export default function CompanyDetail() {
     </div>
   );
 }
-

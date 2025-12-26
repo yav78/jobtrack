@@ -1,6 +1,6 @@
 import { ContactForm } from "@/components/contacts/ContactForm";
 import { ContactsTable } from "@/components/contacts/ContactsTable";
-import { absoluteUrl } from "@/lib/api";
+import contactService from "@/lib/services/front/contact.service";
 
 type ContactRow = {
   id: string;
@@ -9,15 +9,8 @@ type ContactRow = {
   companyId: string;
 };
 
-async function fetchContacts(): Promise<ContactRow[]> {
-  const res = await fetch(absoluteUrl("/api/contacts"), { cache: "no-store" });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.items ?? [];
-}
-
 export default async function ContactsPage() {
-  const contacts = await fetchContacts();
+  const contacts = await contactService.list();
 
   return (
     <div className="space-y-6">
@@ -39,4 +32,3 @@ export default async function ContactsPage() {
     </div>
   );
 }
-

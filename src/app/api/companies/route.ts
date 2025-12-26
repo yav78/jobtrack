@@ -5,6 +5,7 @@ import { getCompanies, createCompany } from "@/lib/services/companies";
 export async function GET(req: Request) {
   try {
     const userId = await requireUserId();
+    console.log(userId);
     const { page, pageSize, q } = parsePagination(req);
     const result = await getCompanies(userId, { page, pageSize, q });
     return jsonOk(result);

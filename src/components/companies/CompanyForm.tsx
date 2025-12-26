@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { pushToast } from "@/components/common/Toast";
+import companyService from "@/lib/services/front/company.service";
 
 type Props = {
   onSuccess?: (company?: { id: string; name: string }) => void;
 };
 
 export function CompanyForm({ onSuccess }: Props) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -20,16 +23,15 @@ export function CompanyForm({ onSuccess }: Props) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/companies", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...form, website: form.website || undefined, notes: form.notes || undefined }),
+      const data = await companyService.create({
+        ...form,
+        website: form.website || undefined,
+        notes: form.notes || undefined,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Entreprise créée" });
       setForm({ name: "", typeCode: "CLIENT_FINAL", website: "", notes: "" });
       onSuccess?.(data);
+      router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       pushToast({ type: "error", title: "Erreur création", description: message });
@@ -90,4 +92,3 @@ export function CompanyForm({ onSuccess }: Props) {
     </form>
   );
 }
-

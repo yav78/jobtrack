@@ -5,17 +5,7 @@ import { useRouter } from "next/navigation";
 import { OpportunityForm } from "@/components/opportunities/OpportunityForm";
 import { OpportunitiesTable } from "@/components/opportunities/OpportunitiesTable";
 import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
-
-async function fetchOpportunities(): Promise<WorkOpportunityDTO[]> {
-  try {
-    const res = await fetch("/api/opportunities");
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.items ?? [];
-  } catch {
-    return [];
-  }
-}
+import opportunityService from "@/lib/services/front/opportunity.service";
 
 export default function OpportunitiesPage() {
   const router = useRouter();
@@ -25,7 +15,7 @@ export default function OpportunitiesPage() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const data = await fetchOpportunities();
+      const data = await opportunityService.list();
       setOpportunities(data);
       setLoading(false);
     };
@@ -34,7 +24,7 @@ export default function OpportunitiesPage() {
 
   const handleSuccess = async () => {
     // Recharger la liste après création
-    const data = await fetchOpportunities();
+    const data = await opportunityService.list();
     setOpportunities(data);
     router.refresh();
   };
@@ -63,4 +53,3 @@ export default function OpportunitiesPage() {
     </div>
   );
 }
-
