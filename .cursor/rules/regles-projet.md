@@ -121,3 +121,4 @@ npm run db:seed    # Seed la base de données
 En résumer :  
 - `src/lib/services/front/` pour les services fronts
 - `src/lib/services/back/` pour les services backs (coté serveur)
+
