@@ -1,5 +1,5 @@
 import { jsonError, jsonOk } from "@/lib/errors/response";
-import { getCompanyTypes } from "@/lib/services/company-types";
+import { getCompanyTypes } from "@/lib/services/back/company-types";
 import type { CompanyTypeDTO } from "@/lib/dto/company-type";
 
 export async function GET() {

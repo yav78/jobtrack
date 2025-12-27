@@ -1,6 +1,6 @@
 import { jsonCreated, jsonOk } from "@/lib/errors/response";
 import { handleRouteError, parsePagination, requireUserId } from "@/lib/api-helpers";
-import { getOpportunities, createOpportunity } from "@/lib/services/opportunities";
+import { getOpportunities, createOpportunity } from "@/lib/services/back/opportunities";
 
 export async function GET(req: Request) {
   try {

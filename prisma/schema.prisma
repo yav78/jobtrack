@@ -155,6 +155,7 @@ model OpportunityAction {
   type              OpportunityActionType
   notes             String?
   metadata          Json?
+  channelTypeCode   String?
   userId            String                     @db.Uuid
   workOpportunityId String                     @db.Uuid
   contactChannelId  String?                    @db.Uuid
@@ -170,6 +171,7 @@ model OpportunityAction {
   @@index([workOpportunityId])
   @@index([contactChannelId])
   @@index([type, occurredAt])
+  @@index([channelTypeCode])
 }
 
 model OpportunityActionContact {

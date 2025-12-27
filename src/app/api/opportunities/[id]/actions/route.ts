@@ -1,6 +1,6 @@
 import { jsonCreated, jsonOk } from "@/lib/errors/response";
 import { handleRouteError, requireUserId } from "@/lib/api-helpers";
-import { getOpportunityActions, createOpportunityAction } from "@/lib/services/opportunity-actions";
+import { getOpportunityActions, createOpportunityAction } from "@/lib/services/back/opportunity-actions";
 import { opportunityActionCreateSchema } from "@/lib/validators/opportunity-action";
 import { prisma } from "@/lib/prisma";
 import { NotFound } from "@/lib/errors";
@@ -34,6 +34,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       type: action.type,
       notes: action.notes,
       metadata: action.metadata as Record<string, unknown> | null,
+      channelTypeCode: action.channelTypeCode,
       userId: action.userId,
       workOpportunityId: action.workOpportunityId,
       contactChannelId: action.contactChannelId,
@@ -86,12 +87,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       // S'assurer que workOpportunityId correspond à l'URL
     });
 
-    // Préparer metadata avec channelTypeCode si fourni
-    const metadata: Record<string, unknown> = validatedData.metadata ? { ...validatedData.metadata } : {};
-    if (validatedData.channelTypeCode) {
-      metadata.channelTypeCode = validatedData.channelTypeCode;
-    }
-
     // Vérifier le contactChannel si fourni
     if (validatedData.contactChannelId) {
       const channel = await prisma.contactChannel.findFirst({
@@ -126,7 +121,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const action = await createOpportunityAction(userId, {
       ...validatedData,
       workOpportunityId: id,
-      metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
     });
 
     // Transformer en DTO
@@ -136,6 +130,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       type: action.type,
       notes: action.notes,
       metadata: action.metadata as Record<string, unknown> | null,
+      channelTypeCode: action.channelTypeCode,
       userId: action.userId,
       workOpportunityId: action.workOpportunityId,
       contactChannelId: action.contactChannelId,

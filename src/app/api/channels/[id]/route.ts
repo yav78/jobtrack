@@ -1,6 +1,6 @@
 import { jsonOk } from "@/lib/errors/response";
 import { handleRouteError, requireUserId } from "@/lib/api-helpers";
-import { updateChannel, deleteChannel } from "@/lib/services/channels";
+import { updateChannel, deleteChannel } from "@/lib/services/back/channels";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {

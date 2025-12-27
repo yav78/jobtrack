@@ -1,29 +1,58 @@
 import { ACTION_TYPE_COLORS, ACTION_TYPE_LABELS } from "@/constants/opportunityActions";
 import type { OpportunityActionDTO } from "@/lib/dto/opportunity-action";
-import { absoluteUrl } from "@/lib/api";
+import { getOpportunityActions } from "@/lib/services/back/opportunity-actions";
+import { getChannelTypes } from "@/lib/services/back/channel-types";
+import { requireUserId } from "@/lib/api-helpers";
+import type { OpportunityActionType } from "@prisma/client";
 
 type Props = {
   opportunityId: string;
   type?: string;
 };
 
-async function fetchActions(opportunityId: string, type?: string): Promise<OpportunityActionDTO[]> {
-  try {
-    const url = new URL(absoluteUrl(`/api/opportunities/${opportunityId}/actions`));
-    if (type) {
-      url.searchParams.set("type", type);
-    }
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.items ?? [];
-  } catch {
-    return [];
-  }
-}
-
 export async function OpportunityTimeline({ opportunityId, type }: Props) {
-  const actions = await fetchActions(opportunityId, type);
+  const userId = await requireUserId();
+  const [actionsData, channelTypes] = await Promise.all([
+    getOpportunityActions(
+      opportunityId,
+      userId,
+      type ? { type: type as OpportunityActionType } : undefined
+    ),
+    getChannelTypes(),
+  ]);
+
+  // Créer un map pour accéder rapidement aux labels des types de canaux
+  const channelTypeMap = new Map(channelTypes.map((ct) => [ct.code, ct.label]));
+
+  // Transformer en DTO
+  const actions: OpportunityActionDTO[] = actionsData.map((action) => ({
+    id: action.id,
+    occurredAt: action.occurredAt.toISOString(),
+    type: action.type,
+    notes: action.notes,
+    metadata: action.metadata as Record<string, unknown> | null,
+    channelTypeCode: (action as typeof action & { channelTypeCode: string | null }).channelTypeCode ?? null,
+    userId: action.userId,
+    workOpportunityId: action.workOpportunityId,
+    contactChannelId: action.contactChannelId,
+    createdAt: action.createdAt.toISOString(),
+    updatedAt: action.updatedAt.toISOString(),
+    contactChannel: action.contactChannel
+      ? {
+          id: action.contactChannel.id,
+          value: action.contactChannel.value,
+          label: action.contactChannel.label,
+        }
+      : undefined,
+    participants: action.participants.map((p) => ({
+      contactId: p.contactId,
+      contact: {
+        id: p.contact.id,
+        firstName: p.contact.firstName,
+        lastName: p.contact.lastName,
+      },
+    })),
+  }));
 
   if (actions.length === 0) {
     return (
@@ -63,12 +92,27 @@ export async function OpportunityTimeline({ opportunityId, type }: Props) {
               )}
 
               <div className="flex flex-wrap gap-2 text-xs text-neutral-600 dark:text-neutral-400">
-                {action.contactChannel && (
-                  <span>Canal: {action.contactChannel.value}</span>
-                )}
+                {/* Afficher le canal de communication */}
+                {action.contactChannel ? (
+                  <span className="flex items-center gap-1">
+                    <span className="font-medium">Canal:</span>
+                    <span>{action.contactChannel.value}</span>
+                    {action.contactChannel.label && (
+                      <span className="text-neutral-500 dark:text-neutral-500">
+                        ({action.contactChannel.label})
+                      </span>
+                    )}
+                  </span>
+                ) : action.channelTypeCode ? (
+                  <span className="flex items-center gap-1">
+                    <span className="font-medium">Canal:</span>
+                    <span>{channelTypeMap.get(action.channelTypeCode) || action.channelTypeCode}</span>
+                  </span>
+                ) : null}
                 {action.participants && action.participants.length > 0 && (
                   <span>
-                    Participants: {action.participants.map((p) => `${p.contact.firstName} ${p.contact.lastName}`).join(", ")}
+                    <span className="font-medium">Participants:</span>{" "}
+                    {action.participants.map((p) => `${p.contact.firstName} ${p.contact.lastName}`).join(", ")}
                   </span>
                 )}
               </div>

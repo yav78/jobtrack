@@ -1,3 +1,4 @@
+import { requireUserId } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 import { contactCreateSchema, contactUpdateSchema } from "@/lib/validators/contact";
 import type { z } from "zod";
@@ -27,6 +28,7 @@ export async function getContacts(
   const [items, total] = await Promise.all([
     prisma.contact.findMany({
       where,
+      include: { company: true },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -34,6 +36,12 @@ export async function getContacts(
     prisma.contact.count({ where }),
   ]);
   return { items, page, pageSize, total };
+}
+
+export async function getAllContacts() {
+  const userId = await requireUserId();
+  const contacts = await prisma.contact.findMany({ where: { company: { userId } } });
+  return contacts;
 }
 
 export async function createContact(userId: string, data: ContactCreateInput) {

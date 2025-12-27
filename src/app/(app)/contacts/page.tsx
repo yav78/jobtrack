@@ -1,16 +1,44 @@
+"use client";
 import { ContactForm } from "@/components/contacts/ContactForm";
 import { ContactsTable } from "@/components/contacts/ContactsTable";
+import { ContactDTO } from "@/lib/dto/contact";
+
 import contactService from "@/lib/services/front/contact.service";
+import { useEffect, useState } from "react";
+
 
 type ContactRow = {
   id: string;
   firstName: string;
   lastName: string;
   companyId: string;
+  company?: {
+    id: string;
+    name: string;
+  };
 };
 
-export default async function ContactsPage() {
-  const contacts = await contactService.list();
+function convertToContactRow(contacts: ContactDTO[]): ContactRow[] {
+  return contacts.map((contact) => ({
+    id: contact.id,
+    firstName: contact.firstName,
+    lastName: contact.lastName,
+    companyId: contact.companyId,
+    company: contact.company,
+  }));
+}
+
+export default function ContactsPage() {
+  // await contactService.list();
+  const [contacts, setContacts] = useState<ContactRow[] >([]);
+  useEffect(() => {
+    const load = async () => {
+      const data = await contactService.list();
+      console.log(data);
+      setContacts(convertToContactRow(data));
+    };
+    load();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -26,7 +54,10 @@ export default async function ContactsPage() {
         </div>
         <div className="card">
           <h2 className="text-lg font-semibold">Créer un contact</h2>
-          <ContactForm />
+          <ContactForm onSuccess={(contact) => {
+            const newContacts = [...contacts, contact];
+            setContacts(newContacts);
+          }} />
         </div>
       </div>
     </div>

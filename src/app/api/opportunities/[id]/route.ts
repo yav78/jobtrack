@@ -1,12 +1,15 @@
 import { jsonOk } from "@/lib/errors/response";
 import { handleRouteError, requireUserId } from "@/lib/api-helpers";
-import { getOpportunity, updateOpportunity, deleteOpportunity } from "@/lib/services/opportunities";
+import { getOpportunity, updateOpportunity, deleteOpportunity } from "@/lib/services/back/opportunities";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {
     const userId = await requireUserId();
     const { id } = params instanceof Promise ? await params : params;
     const opp = await getOpportunity(id, userId);
+    if (!opp) {
+      return handleRouteError(new Error("Opportunity not found"));
+    }
     return jsonOk(opp);
   } catch (error) {
     return handleRouteError(error);

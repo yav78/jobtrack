@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { OpportunityActionType, Prisma } from "@prisma/client";
-import type { OpportunityActionCreateInput, OpportunityActionUpdateInput } from "./types";
+import type { OpportunityActionCreateInput, OpportunityActionUpdateInput } from "../types";
 
 type OpportunityActionWithRelations = Prisma.OpportunityActionGetPayload<{
   include: {

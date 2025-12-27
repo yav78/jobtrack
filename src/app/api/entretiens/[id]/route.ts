@@ -1,6 +1,6 @@
 import { jsonOk } from "@/lib/errors/response";
 import { handleRouteError, requireUserId } from "@/lib/api-helpers";
-import { getEntretien, updateEntretien, deleteEntretien } from "@/lib/services/entretiens";
+import { getEntretien, updateEntretien, deleteEntretien } from "@/lib/services/back/entretiens";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {

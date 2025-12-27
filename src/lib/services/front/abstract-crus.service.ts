@@ -57,31 +57,45 @@ export abstract class AbstractCrudService implements CrudServiceInterface {
   }
 
   async getAll<T = any>(): Promise<T> {
-    return frontFetchJson<T>(this.basePath);
+    // return frontFetchJson<T>(this.basePath);
+    return fetch(this.basePath).then(response => response.json());
   }
 
   async getById<T = any>(id: string): Promise<T> {
-    return frontFetchJson<T>(`${this.basePath}/${id}`);
+    // return frontFetchJson<T>(`${this.basePath}/${id}`);
+    return fetch(`${this.basePath}/${id}`).then(response => response.json());
   }
 
   async create<T = any>(data: unknown): Promise<T> {
-    return frontFetchJson<T>(this.basePath, {
+    console.log("create", data, this.basePath);
+    // return frontFetchJson<T>(this.basePath, {
+    //   method: "POST",
+    //   body: JSON.stringify(data),
+    // });
+    return fetch(this.basePath, {
       method: "POST",
       body: JSON.stringify(data),
-    });
+    }).then(response => response.json());
   }
 
   async update<T = any>(id: string, data: unknown): Promise<T> {
-    return frontFetchJson<T>(`${this.basePath}/${id}`, {
+    // return frontFetchJson<T>(`${this.basePath}/${id}`, {
+    //   method: "PUT",
+    //   body: JSON.stringify(data),
+    // });
+    return fetch(`${this.basePath}/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
-    });
+    }).then(response => response.json());
   }
 
   async delete<T = any>(id: string): Promise<T> {
-    return frontFetchJson<T>(`${this.basePath}/${id}`, {
+    // return frontFetchJson<T>(`${this.basePath}/${id}`, {
+    //   method: "DELETE",
+    // });
+    return fetch(`${this.basePath}/${id}`, {
       method: "DELETE",
-    });
+    }).then(response => response.json());
   }
 }
 

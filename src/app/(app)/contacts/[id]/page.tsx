@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { ChannelForm } from "@/components/contacts/ChannelForm";
 import contactService from "@/lib/services/front/contact.service";
+import { getContact, getContacts } from "@/lib/services/back/contacts";
+import { requireUserId } from "@/lib/api-helpers";
 
 type ContactDetail = {
   id: string;
@@ -19,7 +21,8 @@ type ContactDetail = {
 
 export default async function ContactDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
   const { id } = await params;
-  const contact = await contactService.detail(id);
+  const userId = await requireUserId();
+  const contact = await getContact(id, userId);
   if (!contact) return notFound();
 
   return (

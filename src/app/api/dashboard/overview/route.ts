@@ -1,7 +1,7 @@
 import { handleRouteError, requireUserId } from "@/lib/api-helpers";
 import { jsonOk } from "@/lib/errors/response";
 import { prisma } from "@/lib/prisma";
-import { getRecentOpportunityActions } from "@/lib/services/opportunity-actions";
+import { getRecentOpportunityActions } from "@/lib/services/back/opportunity-actions";
 import type { OpportunityActionType } from "@prisma/client";
 
 export async function GET() {

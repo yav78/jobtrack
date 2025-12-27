@@ -6,6 +6,7 @@ export type OpportunityActionDTO = {
   type: OpportunityActionType;
   notes: string | null;
   metadata: Record<string, unknown> | null;
+  channelTypeCode: string | null;
   userId: string;
   workOpportunityId: string;
   contactChannelId: string | null;

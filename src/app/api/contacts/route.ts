@@ -1,6 +1,6 @@
 import { jsonCreated, jsonOk } from "@/lib/errors/response";
 import { handleRouteError, parsePagination, requireUserId } from "@/lib/api-helpers";
-import { getContacts, createContact } from "@/lib/services/contacts";
+import { getContacts, createContact } from "@/lib/services/back/contacts";
 
 export async function GET(req: Request) {
   try {
@@ -14,6 +14,8 @@ export async function GET(req: Request) {
     return handleRouteError(error);
   }
 }
+
+
 
 export async function POST(req: Request) {
   try {

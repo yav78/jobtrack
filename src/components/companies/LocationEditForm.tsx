@@ -1,31 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { pushToast } from "@/components/common/Toast";
+import type { LocationDTO } from "@/lib/dto/company";
 
 type Props = {
-  companyId: string;
-  onSuccess?: (data: any) => void;
+  location: LocationDTO;
+  onSuccess?: (data: LocationDTO) => void;
+  onCancel?: () => void;
 };
 
-export function LocationForm({ companyId, onSuccess }: Props) {
+export function LocationEditForm({ location, onSuccess, onCancel }: Props) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    label: "",
-    addressLine1: "",
-    addressLine2: "",
-    zipCode: "",
-    city: "",
-    country: "",
-    isPrimary: false,
+    label: location.label,
+    addressLine1: location.addressLine1,
+    addressLine2: location.addressLine2 || "",
+    zipCode: location.zipCode,
+    city: location.city,
+    country: location.country,
+    isPrimary: location.isPrimary,
   });
+
+  // Mettre à jour le formulaire si la location change
+  useEffect(() => {
+    setForm({
+      label: location.label,
+      addressLine1: location.addressLine1,
+      addressLine2: location.addressLine2 || "",
+      zipCode: location.zipCode,
+      city: location.city,
+      country: location.country,
+      isPrimary: location.isPrimary,
+    });
+  }, [location]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`/api/companies/${companyId}/locations`, {
-        method: "POST",
+      const res = await fetch(`/api/locations/${location.id}`, {
+        method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...form,
@@ -33,24 +48,12 @@ export function LocationForm({ companyId, onSuccess }: Props) {
         }),
       });
       const data = await res.json();
-      console.log("data", data);
       if (!res.ok) throw new Error(data.error || "Erreur");
-      pushToast({ type: "success", title: "Lieu créé" });
+      pushToast({ type: "success", title: "Lieu mis à jour" });
       onSuccess?.(data);
-      
-      setForm({
-        label: "",
-        addressLine1: "",
-        addressLine2: "",
-        zipCode: "",
-        city: "",
-        country: "",
-        isPrimary: false,
-      });
-      
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      pushToast({ type: "error", title: "Erreur lieu", description: message });
+      pushToast({ type: "error", title: "Erreur mise à jour", description: message });
     } finally {
       setLoading(false);
     }
@@ -121,13 +124,25 @@ export function LocationForm({ companyId, onSuccess }: Props) {
         />
         Marquer comme lieu principal
       </label>
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50"
-      >
-        {loading ? "En cours..." : "Ajouter"}
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex-1 rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {loading ? "En cours..." : "Enregistrer"}
+        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            className="rounded border border-neutral-300 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800 disabled:opacity-50"
+          >
+            Annuler
+          </button>
+        )}
+      </div>
     </form>
   );
 }

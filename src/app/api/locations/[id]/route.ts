@@ -1,6 +1,6 @@
 import { jsonError, jsonOk } from "@/lib/errors/response";
 import { handleRouteError, requireUserId } from "@/lib/api-helpers";
-import { updateLocation, deleteLocation } from "@/lib/services/locations";
+import { updateLocation, deleteLocation } from "@/lib/services/back/locations";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {

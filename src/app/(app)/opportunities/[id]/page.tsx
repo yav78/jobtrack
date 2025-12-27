@@ -5,6 +5,8 @@ import { OpportunityTimeline } from "@/components/opportunities/OpportunityTimel
 import { ActionPageClient } from "@/components/opportunities/ActionPageClient";
 import { ActionTypeFilterClient } from "@/components/opportunities/ActionTypeFilterClient";
 import opportunityService from "@/lib/services/front/opportunity.service";
+import { getOpportunity } from "@/lib/services/back/opportunities";
+import { requireUserId } from "@/lib/api-helpers";
 
 // Désactiver le cache pour cette page dynamique
 export const dynamic = "force-dynamic";
@@ -23,9 +25,9 @@ export default async function OpportunityDetailPage({
   if (!resolvedParams?.id) {
     return notFound();
   }
-  
+  const userId = await requireUserId();
   // Forcer le re-fetch sans cache
-  const opp = await opportunityService.detail(resolvedParams.id);
+  const opp = await getOpportunity(resolvedParams.id, userId);
   if (!opp) return notFound();
   
   // Vérifier que l'ID correspond bien

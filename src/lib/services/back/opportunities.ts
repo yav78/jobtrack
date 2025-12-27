@@ -1,9 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import { opportunityCreateSchema, opportunityUpdateSchema } from "@/lib/validators/opportunity";
 import type { z } from "zod";
+import type { Contact, ContactChannel, Entretien, WorkOpportunity, Prisma } from "@prisma/client";
 
 type OpportunityCreateInput = z.infer<typeof opportunityCreateSchema>;
 type OpportunityUpdateInput = z.infer<typeof opportunityUpdateSchema>;
+
+type OpportunityWithRelations = Prisma.WorkOpportunityGetPayload<{
+  include: {
+    company: true;
+    entretiens: {
+      include: { contacts: true; contactChannel: true };
+    };
+  };
+}>;
 
 export async function getOpportunities(userId: string, options?: { page?: number; pageSize?: number; q?: string }) {
   const page = options?.page ?? 1;
@@ -37,17 +47,18 @@ export async function createOpportunity(userId: string, data: OpportunityCreateI
   return opp;
 }
 
-export async function getOpportunity(id: string, userId: string) {
+export async function getOpportunity(id: string, userId: string): Promise<OpportunityWithRelations | null> {
   const opp = await prisma.workOpportunity.findFirst({
     where: { id, userId },
     include: {
+      company: true,
       entretiens: {
         include: { contacts: true, contactChannel: true },
         orderBy: { date: "desc" },
       },
     },
   });
-  if (!opp) throw new Error("Not found");
+  if (!opp) return null;
   return opp;
 }
 

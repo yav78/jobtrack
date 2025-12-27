@@ -1,6 +1,6 @@
 import { jsonCreated, jsonOk } from "@/lib/errors/response";
 import { handleRouteError, parsePagination, requireUserId } from "@/lib/api-helpers";
-import { getEntretiens, createEntretien } from "@/lib/services/entretiens";
+import { getEntretiens, createEntretien } from "@/lib/services/back/entretiens";
 
 export async function GET(req: Request) {
   try {

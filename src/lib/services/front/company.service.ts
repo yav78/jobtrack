@@ -12,7 +12,9 @@ class CompanyService extends AbstractCrudService {
 
   async list(): Promise<CompanyDTO[]> {
     try {
-      const data = await this.getAll<CompanyListResponse>();
+      const data = await this.getAll();
+      console.log("data", data);
+      return data;
       return data.items ?? [];
     } catch {
       return [];

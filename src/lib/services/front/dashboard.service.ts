@@ -18,5 +18,7 @@ export type DashboardResponse = {
 };
 
 export async function getDashboardOverview(): Promise<DashboardResponse> {
+  
   return frontFetchJson<DashboardResponse>("/api/dashboard/overview");
+  // return fetch("/api/dashboard/overview").then(response => response.json());
 }

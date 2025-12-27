@@ -1,5 +1,5 @@
 import { jsonError, jsonOk } from "@/lib/errors/response";
-import { getChannelTypes } from "@/lib/services/channel-types";
+import { getChannelTypes } from "@/lib/services/back/channel-types";
 import type { ChannelTypeDTO } from "@/lib/dto/channel";
 
 export async function GET() {

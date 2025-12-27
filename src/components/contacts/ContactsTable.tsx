@@ -8,6 +8,10 @@ type ContactRow = {
   firstName: string;
   lastName: string;
   companyId?: string;
+  company?: {
+    id: string;
+    name: string;
+  };
 };
 
 type Props = {
@@ -28,7 +32,7 @@ export function ContactsTable({ data }: Props) {
             </Link>
           ),
         },
-        { header: "Entreprise", render: () => "—" },
+        { header: "Entreprise", render: (row) => <Link href={`/companies/${row.company?.id}`}>{row.company?.name || '—'}</Link> },
       ]}
     />
   );

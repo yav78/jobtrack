@@ -1,3 +1,5 @@
+import { CompanyDTO } from "./company";
+
 export type ContactChannelDTO = {
   id: string;
   contactId: string;
@@ -20,5 +22,6 @@ export type ContactDTO = {
   createdAt: string;
   updatedAt: string;
   channels?: ContactChannelDTO[];
+  company?: CompanyDTO;
 };
 

@@ -1,6 +1,6 @@
 import { jsonCreated } from "@/lib/errors/response";
 import { handleRouteError, requireUserId } from "@/lib/api-helpers";
-import { createLocation } from "@/lib/services/locations";
+import { createLocation } from "@/lib/services/back/locations";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {

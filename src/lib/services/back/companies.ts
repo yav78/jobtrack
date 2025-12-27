@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { companyCreateSchema, companyUpdateSchema } from "@/lib/validators/company";
 import type { z } from "zod";
+import { requireUserId } from "../../api-helpers";
 
 type CompanyCreateInput = z.infer<typeof companyCreateSchema>;
 type CompanyUpdateInput = z.infer<typeof companyUpdateSchema>;
@@ -29,6 +30,15 @@ export async function getCompanies(userId: string, options?: { page?: number; pa
     prisma.company.count({ where }),
   ]);
   return { items, page, pageSize, total };
+}
+
+export async function getAllCompanies() {
+  const userId = await requireUserId();
+  const companies = await prisma.company.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+  return companies;
 }
 
 export async function createCompany(userId: string, data: CompanyCreateInput) {
