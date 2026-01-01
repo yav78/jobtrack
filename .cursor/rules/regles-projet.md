@@ -49,6 +49,17 @@ Jobtrack est un mini CRM de recherche d'emploi construit avec :
 - Préférer les Server Components quand possible (Next.js App Router)
 - Utiliser TailwindCSS pour le styling
 - Respecter le dark mode (utiliser les classes dark: de Tailwind)
+- **Créer des composants réutilisables** : 
+  - Extraire la logique commune dans des composants réutilisables
+  - Préférer la composition plutôt que la duplication de code
+  - Créer des composants génériques avec des props bien typées
+  - Placer les composants réutilisables dans `src/components/common/` ou `src/components/[feature]/`
+- **Séparation du CSS** :
+  - Éviter au maximum l'utilisation de styles globaux pour les composants
+  - Utiliser les classes Tailwind directement dans les composants
+  - Si des styles CSS personnalisés sont nécessaires, les définir dans le même fichier du composant ou dans un fichier CSS module (`Component.module.css`)
+  - Ne pas polluer le CSS global avec des styles spécifiques à un composant
+  - Utiliser les variables CSS de Tailwind pour la cohérence (couleurs, espacements, etc.)
 
 ### Tests
 - Écrire des tests unitaires pour les validateurs Zod
@@ -121,4 +132,6 @@ npm run db:seed    # Seed la base de données
 En résumer :  
 - `src/lib/services/front/` pour les services fronts
 - `src/lib/services/back/` pour les services backs (coté serveur)
+
+
 
