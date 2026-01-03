@@ -26,7 +26,7 @@ export function OpportunitiesTable({ data }: Props) {
               "—"
             ),
         },
-        { header: "Description", render: (row) => row.description ?? "-" },
+        { header: "Date", render: (row) => (new Date(row.createdAt)).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) },
       ]}
     />
   );

@@ -1,10 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
 import { OpportunityTimeline } from "@/components/opportunities/OpportunityTimeline";
 import { ActionPageClient } from "@/components/opportunities/ActionPageClient";
 import { ActionTypeFilterClient } from "@/components/opportunities/ActionTypeFilterClient";
-import opportunityService from "@/lib/services/front/opportunity.service";
+import { OpportunityEditClient } from "@/components/opportunities/OpportunityEditClient";
 import { getOpportunity } from "@/lib/services/back/opportunities";
 import { requireUserId } from "@/lib/api-helpers";
 
@@ -38,19 +36,26 @@ export default async function OpportunityDetailPage({
 
   const type = resolvedSearchParams?.type;
 
+  // Transformer l'opportunité en DTO pour le composant client
+  const opportunityDTO = {
+    id: opp.id,
+    title: opp.title,
+    description: opp.description,
+    companyId: opp.companyId,
+    userId: opp.userId,
+    createdAt: opp.createdAt.toISOString(),
+    updatedAt: opp.updatedAt.toISOString(),
+    company: opp.company
+      ? {
+          id: opp.company.id,
+          name: opp.company.name,
+        }
+      : null,
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{opp.title}</h1>
-          {opp.description && <p className="text-sm text-neutral-600 dark:text-neutral-300">{opp.description}</p>}
-          {opp.company && (
-            <p className="text-sm text-neutral-600 dark:text-neutral-300">
-              Entreprise: <Link href={`/companies/${opp.company.id}`} className="text-emerald-600 hover:underline dark:text-emerald-400">{opp.company.name}</Link>
-            </p>
-          )}
-        </div>
-      </div>
+      <OpportunityEditClient opportunity={opportunityDTO} />
 
       <div className="card space-y-4">
         <div className="flex items-center justify-between">
