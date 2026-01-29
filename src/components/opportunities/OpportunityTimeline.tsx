@@ -3,6 +3,7 @@ import type { OpportunityActionDTO } from "@/lib/dto/opportunity-action";
 import { getOpportunityActions } from "@/lib/services/back/opportunity-actions";
 import { getChannelTypes } from "@/lib/services/back/channel-types";
 import { requireUserId } from "@/lib/api-helpers";
+import { ActionDeleteButton } from "./ActionDeleteButton";
 import type { OpportunityActionType } from "@prisma/client";
 
 type Props = {
@@ -71,20 +72,23 @@ export async function OpportunityTimeline({ opportunityId, type }: Props) {
         >
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`rounded px-2 py-0.5 text-xs font-medium ${
-                    ACTION_TYPE_COLORS[action.type] ?? ACTION_TYPE_COLORS.DEFAULT
-                  }`}
-                >
-                  {ACTION_TYPE_LABELS[action.type] ?? action.type}
-                </span>
-                <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                  {new Date(action.occurredAt).toLocaleString("fr-FR", {
-                    dateStyle: "short",
-                    timeStyle: "short",
-                  })}
-                </span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded px-2 py-0.5 text-xs font-medium ${
+                      ACTION_TYPE_COLORS[action.type] ?? ACTION_TYPE_COLORS.DEFAULT
+                    }`}
+                  >
+                    {ACTION_TYPE_LABELS[action.type] ?? action.type}
+                  </span>
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                    {new Date(action.occurredAt).toLocaleString("fr-FR", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </span>
+                </div>
+                <ActionDeleteButton actionId={action.id} opportunityId={opportunityId} />
               </div>
 
               {action.notes && (
