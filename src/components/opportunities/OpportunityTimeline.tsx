@@ -26,34 +26,39 @@ export async function OpportunityTimeline({ opportunityId, type }: Props) {
   const channelTypeMap = new Map(channelTypes.map((ct) => [ct.code, ct.label]));
 
   // Transformer en DTO
-  const actions: OpportunityActionDTO[] = actionsData.map((action) => ({
-    id: action.id,
-    occurredAt: action.occurredAt.toISOString(),
-    type: action.type,
-    notes: action.notes,
-    metadata: action.metadata as Record<string, unknown> | null,
-    channelTypeCode: (action as typeof action & { channelTypeCode: string | null }).channelTypeCode ?? null,
-    userId: action.userId,
-    workOpportunityId: action.workOpportunityId,
-    contactChannelId: action.contactChannelId,
-    createdAt: action.createdAt.toISOString(),
-    updatedAt: action.updatedAt.toISOString(),
-    contactChannel: action.contactChannel
-      ? {
-          id: action.contactChannel.id,
-          value: action.contactChannel.value,
-          label: action.contactChannel.label,
-        }
-      : undefined,
-    participants: action.participants.map((p) => ({
-      contactId: p.contactId,
-      contact: {
-        id: p.contact.id,
-        firstName: p.contact.firstName,
-        lastName: p.contact.lastName,
-      },
-    })),
-  }));
+  const actions: OpportunityActionDTO[] = actionsData.map((action) => {
+    const a = action as typeof action & { companyId?: string | null; contactId?: string | null };
+    return {
+      id: action.id,
+      occurredAt: action.occurredAt.toISOString(),
+      type: action.type,
+      notes: action.notes,
+      metadata: action.metadata as Record<string, unknown> | null,
+      channelTypeCode: a.channelTypeCode ?? null,
+      userId: action.userId,
+      workOpportunityId: action.workOpportunityId ?? null,
+      companyId: a.companyId ?? null,
+      contactId: a.contactId ?? null,
+      contactChannelId: action.contactChannelId,
+      createdAt: action.createdAt.toISOString(),
+      updatedAt: action.updatedAt.toISOString(),
+      contactChannel: action.contactChannel
+        ? {
+            id: action.contactChannel.id,
+            value: action.contactChannel.value,
+            label: action.contactChannel.label,
+          }
+        : undefined,
+      participants: action.participants.map((p) => ({
+        contactId: p.contactId,
+        contact: {
+          id: p.contact.id,
+          firstName: p.contact.firstName,
+          lastName: p.contact.lastName,
+        },
+      })),
+    };
+  });
 
   if (actions.length === 0) {
     return (

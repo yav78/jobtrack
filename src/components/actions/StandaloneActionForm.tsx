@@ -7,6 +7,7 @@ import { pushToast } from "@/components/common/Toast";
 import type { OpportunityActionType } from "@prisma/client";
 import type { ContactDTO } from "@/lib/dto/contact";
 import type { ChannelTypeDTO } from "@/lib/dto/channel";
+import type { OpportunityActionDTO } from "@/lib/dto/opportunity-action";
 
 const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
   { value: "INTERVIEW", label: "Entretien" },
@@ -27,6 +28,15 @@ type CompanyOption = { id: string; name: string };
 type Props = {
   open: boolean;
   onClose: () => void;
+  /** Contact pré-sélectionné (ex. depuis la page contact) */
+  defaultContactId?: string;
+  defaultCompanyId?: string;
+  /** Appelé après création ou mise à jour réussie */
+  onSuccess?: (action: OpportunityActionDTO) => void;
+  /** Mode édition : id de l’action à modifier */
+  actionId?: string;
+  /** Données initiales pour pré-remplir le formulaire (mode édition) */
+  initialData?: OpportunityActionDTO;
 };
 
 async function fetchCompanies(): Promise<CompanyOption[]> {
@@ -40,7 +50,19 @@ async function fetchCompanies(): Promise<CompanyOption[]> {
   }
 }
 
-async function fetchContacts(companyId: string): Promise<ContactDTO[]> {
+/** Tous les contacts (pour "action entre User et Contact") */
+async function fetchAllContacts(): Promise<ContactDTO[]> {
+  try {
+    const res = await fetch("/api/contacts?pageSize=300");
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.items ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function fetchContactsByCompany(companyId: string): Promise<ContactDTO[]> {
   try {
     const res = await fetch(`/api/contacts?companyId=${companyId}`);
     if (!res.ok) return [];
@@ -62,17 +84,28 @@ async function fetchChannelTypes(): Promise<ChannelTypeDTO[]> {
   }
 }
 
-export function StandaloneActionForm({ open, onClose }: Props) {
+export function StandaloneActionForm({
+  open,
+  onClose,
+  defaultContactId,
+  defaultCompanyId,
+  onSuccess,
+  actionId: editActionId,
+  initialData,
+}: Props) {
+  const isEdit = Boolean(editActionId && initialData);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
-  const [contacts, setContacts] = useState<ContactDTO[]>([]);
+  const [allContacts, setAllContacts] = useState<ContactDTO[]>([]);
+  const [contactsByCompany, setContactsByCompany] = useState<ContactDTO[]>([]);
   const [channelTypes, setChannelTypes] = useState<ChannelTypeDTO[]>([]);
   const [form, setForm] = useState({
     type: "OUTBOUND_CONTACT" as OpportunityActionType,
     occurredAt: new Date().toISOString().slice(0, 16),
     notes: "",
     channelTypeCode: "",
+    contactId: "" as string,
     companyId: "" as string,
     participantContactIds: [] as string[],
   });
@@ -80,16 +113,46 @@ export function StandaloneActionForm({ open, onClose }: Props) {
   useEffect(() => {
     if (open) {
       fetchCompanies().then(setCompanies);
+      fetchAllContacts().then(setAllContacts);
       fetchChannelTypes().then(setChannelTypes);
+      if (initialData) {
+        const d = new Date(initialData.occurredAt);
+        const pad = (n: number) => String(n).padStart(2, "0");
+        const occurredAtLocal = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        setForm({
+          type: initialData.type,
+          occurredAt: occurredAtLocal,
+          notes: initialData.notes ?? "",
+          channelTypeCode: initialData.channelTypeCode ?? "",
+          contactId: initialData.contactId ?? "",
+          companyId: initialData.companyId ?? "",
+          participantContactIds:
+            initialData.participants?.map((p) => p.contactId) ?? [],
+        });
+      } else if (defaultContactId) {
+        setForm((f) => ({
+          ...f,
+          contactId: defaultContactId,
+          companyId: defaultCompanyId ?? f.companyId,
+          participantContactIds: [defaultContactId],
+        }));
+      } else {
+        setForm((f) => ({
+          ...f,
+          contactId: "",
+          companyId: "",
+          participantContactIds: [],
+        }));
+      }
     }
-  }, [open]);
+  }, [open, defaultContactId, defaultCompanyId, initialData]);
 
   useEffect(() => {
     if (open && form.companyId) {
-      fetchContacts(form.companyId).then(setContacts);
+      fetchContactsByCompany(form.companyId).then(setContactsByCompany);
     } else {
-      setContacts([]);
-      setForm((f) => ({ ...f, participantContactIds: [] }));
+      setContactsByCompany([]);
+      setForm((f) => ({ ...f, participantContactIds: f.contactId ? [f.contactId] : [] }));
     }
   }, [open, form.companyId]);
 
@@ -97,27 +160,33 @@ export function StandaloneActionForm({ open, onClose }: Props) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/actions", {
-        method: "POST",
+      const payload = {
+        type: form.type,
+        occurredAt: new Date(form.occurredAt).toISOString(),
+        notes: form.notes || undefined,
+        channelTypeCode: form.channelTypeCode || undefined,
+        contactId: form.contactId || undefined,
+        companyId: form.companyId || undefined,
+        participantContactIds:
+          form.participantContactIds.length > 0 ? form.participantContactIds : undefined,
+      };
+      const url = isEdit && editActionId ? `/api/actions/${editActionId}` : "/api/actions";
+      const method = isEdit ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          type: form.type,
-          occurredAt: new Date(form.occurredAt).toISOString(),
-          notes: form.notes || undefined,
-          channelTypeCode: form.channelTypeCode || undefined,
-          companyId: form.companyId || undefined,
-          participantContactIds:
-            form.participantContactIds.length > 0 ? form.participantContactIds : undefined,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur");
-      pushToast({ type: "success", title: "Action créée" });
+      pushToast({ type: "success", title: isEdit ? "Action modifiée" : "Action créée" });
+      onSuccess?.(data);
       setForm({
         type: "OUTBOUND_CONTACT",
         occurredAt: new Date().toISOString().slice(0, 16),
         notes: "",
         channelTypeCode: "",
+        contactId: "",
         companyId: "",
         participantContactIds: [],
       });
@@ -131,7 +200,7 @@ export function StandaloneActionForm({ open, onClose }: Props) {
     }
   };
 
-  const toggleContact = (contactId: string) => {
+  const toggleParticipant = (contactId: string) => {
     setForm((f) => {
       const exists = f.participantContactIds.includes(contactId);
       const participantContactIds = exists
@@ -141,9 +210,40 @@ export function StandaloneActionForm({ open, onClose }: Props) {
     });
   };
 
+  const onContactSelect = (contactId: string) => {
+    const contact = allContacts.find((c) => c.id === contactId);
+    setForm((f) => ({
+      ...f,
+      contactId,
+      companyId: contact?.companyId ?? f.companyId,
+      participantContactIds: contactId
+        ? [contactId, ...f.participantContactIds.filter((id) => id !== contactId)]
+        : [],
+    }));
+  };
+
+  const modalTitle = isEdit ? "Modifier l'action" : "Nouvelle action (prise de contact)";
+
   return (
-    <Modal open={open} title="Nouvelle action (prise de contact)" onClose={onClose}>
+    <Modal open={open} title={modalTitle} onClose={onClose}>
       <form className="space-y-4" onSubmit={submit}>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Avec quel contact ? (action entre vous et un contact)</label>
+          <select
+            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            value={form.contactId}
+            onChange={(e) => onContactSelect(e.target.value)}
+          >
+            <option value="">Aucun</option>
+            {allContacts.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.firstName} {c.lastName}
+                {c.company?.name ? ` — ${c.company.name}` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="space-y-1">
           <label className="text-sm font-medium">Type</label>
           <select
@@ -187,16 +287,16 @@ export function StandaloneActionForm({ open, onClose }: Props) {
           </select>
         </div>
 
-        {contacts.length > 0 && (
+        {contactsByCompany.length > 0 && (
           <div className="space-y-1">
-            <label className="text-sm font-medium">Participants</label>
+            <label className="text-sm font-medium">Autres participants (optionnel)</label>
             <div className="max-h-32 space-y-1 overflow-y-auto rounded border border-neutral-300 p-2 dark:border-neutral-700">
-              {contacts.map((contact) => (
+              {contactsByCompany.map((contact) => (
                 <label key={contact.id} className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
                     checked={form.participantContactIds.includes(contact.id)}
-                    onChange={() => toggleContact(contact.id)}
+                    onChange={() => toggleParticipant(contact.id)}
                   />
                   <span>
                     {contact.firstName} {contact.lastName}
@@ -246,7 +346,7 @@ export function StandaloneActionForm({ open, onClose }: Props) {
             disabled={loading}
             className="rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50"
           >
-            {loading ? "En cours..." : "Créer"}
+            {loading ? "En cours..." : isEdit ? "Enregistrer" : "Créer"}
           </button>
         </div>
       </form>

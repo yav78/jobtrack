@@ -84,6 +84,7 @@ model Contact {
   channels          ContactChannel[]
   entretienLinks    EntretienContact[]
   actionLinks       OpportunityActionContact[]
+  actionsAsMainContact OpportunityAction[]
 
   @@index([companyId])
 }
@@ -160,6 +161,7 @@ model OpportunityAction {
   userId            String                     @db.Uuid
   workOpportunityId String?                    @db.Uuid
   companyId         String?                    @db.Uuid
+  contactId         String?                    @db.Uuid
   contactChannelId  String?                    @db.Uuid
   legacyEntretienId String?                    @unique
   createdAt         DateTime                   @default(now())
@@ -168,11 +170,13 @@ model OpportunityAction {
   user              User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
   workOpportunity   WorkOpportunity?           @relation(fields: [workOpportunityId], references: [id], onDelete: Cascade)
   company           Company?                   @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  contact           Contact?                   @relation(fields: [contactId], references: [id], onDelete: SetNull)
   participants      OpportunityActionContact[]
 
   @@index([userId])
   @@index([workOpportunityId])
   @@index([companyId])
+  @@index([contactId])
   @@index([contactChannelId])
   @@index([type, occurredAt])
   @@index([channelTypeCode])

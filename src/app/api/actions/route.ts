@@ -5,7 +5,7 @@ import { opportunityActionCreateSchema } from "@/lib/validators/opportunity-acti
 import { prisma } from "@/lib/prisma";
 import type { OpportunityActionType } from "@prisma/client";
 
-function actionToDto(action: {
+export function actionToDto(action: {
   id: string;
   occurredAt: Date;
   type: OpportunityActionType;
@@ -15,6 +15,7 @@ function actionToDto(action: {
   userId: string;
   workOpportunityId?: string | null;
   companyId?: string | null;
+  contactId?: string | null;
   contactChannelId: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -29,6 +30,12 @@ function actionToDto(action: {
     company?: { id: string; name: string } | null;
   } | null;
   company?: { id: string; name: string } | null;
+  contact?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    company?: { id: string; name: string } | null;
+  } | null;
 }) {
   return {
     id: action.id,
@@ -40,6 +47,7 @@ function actionToDto(action: {
     userId: action.userId,
     workOpportunityId: action.workOpportunityId ?? null,
     companyId: action.companyId ?? null,
+    contactId: action.contactId ?? null,
     contactChannelId: action.contactChannelId,
     createdAt: action.createdAt.toISOString(),
     updatedAt: action.updatedAt.toISOString(),
@@ -66,6 +74,14 @@ function actionToDto(action: {
         }
       : undefined,
     company: action.company ?? undefined,
+    contact: action.contact
+      ? {
+          id: action.contact.id,
+          firstName: action.contact.firstName,
+          lastName: action.contact.lastName,
+          company: action.contact.company ?? undefined,
+        }
+      : undefined,
   };
 }
 
@@ -75,13 +91,14 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const workOpportunityId = searchParams.get("workOpportunityId") ?? undefined;
     const companyId = searchParams.get("companyId") ?? undefined;
+    const contactId = searchParams.get("contactId") ?? undefined;
     const type = (searchParams.get("type") as OpportunityActionType | null) ?? undefined;
     const limit = searchParams.get("limit") ? parseInt(searchParams.get("limit")!, 10) : undefined;
     const offset = searchParams.get("offset") ? parseInt(searchParams.get("offset")!, 10) : undefined;
 
     const actions = await getAllActions(
       userId,
-      { workOpportunityId, companyId, type },
+      { workOpportunityId, companyId, contactId, type },
       { limit, offset }
     );
 
@@ -105,6 +122,15 @@ export async function POST(req: Request) {
       });
       if (!company) {
         return handleRouteError(new Error("Company not found"));
+      }
+    }
+
+    if (validatedData.contactId) {
+      const contact = await prisma.contact.findFirst({
+        where: { id: validatedData.contactId, company: { userId } },
+      });
+      if (!contact) {
+        return handleRouteError(new Error("Contact not found"));
       }
     }
 
@@ -136,6 +162,7 @@ export async function POST(req: Request) {
       ...validatedData,
       workOpportunityId: validatedData.workOpportunityId ?? undefined,
       companyId: validatedData.companyId ?? undefined,
+      contactId: validatedData.contactId ?? undefined,
     });
 
     const dto = actionToDto(action);

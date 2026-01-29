@@ -57,6 +57,25 @@ type OpportunityActionWithOpportunity = Prisma.OpportunityActionGetPayload<{
         };
       };
     };
+    company: {
+      select: {
+        id: true;
+        name: true;
+      };
+    };
+    contact: {
+      select: {
+        id: true;
+        firstName: true;
+        lastName: true;
+        company: {
+          select: {
+            id: true;
+            name: true;
+          };
+        };
+      };
+    };
   };
 }>;
 
@@ -145,6 +164,25 @@ export async function getRecentOpportunityActions(
           },
         },
       },
+      company: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      contact: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       occurredAt: "desc",
@@ -152,12 +190,13 @@ export async function getRecentOpportunityActions(
     take: limit,
   });
 
-  return actions as (OpportunityActionWithOpportunity & { companyId?: string | null; company?: { id: string; name: string } | null })[];
+  return actions as OpportunityActionWithOpportunity[];
 }
 
 export type ListActionsFilters = {
   workOpportunityId?: string;
   companyId?: string;
+  contactId?: string;
   type?: OpportunityActionType;
 };
 
@@ -165,7 +204,7 @@ export async function getAllActions(
   userId: string,
   filters?: ListActionsFilters,
   options?: { limit?: number; offset?: number }
-): Promise<(OpportunityActionWithOpportunity & { companyId?: string | null })[]> {
+): Promise<OpportunityActionWithOpportunity[]> {
   const where: Prisma.OpportunityActionWhereInput = { userId };
 
   if (filters?.workOpportunityId !== undefined) {
@@ -173,6 +212,9 @@ export async function getAllActions(
   }
   if (filters?.companyId !== undefined) {
     (where as Record<string, unknown>).companyId = filters.companyId;
+  }
+  if (filters?.contactId !== undefined) {
+    (where as Record<string, unknown>).contactId = filters.contactId;
   }
   if (filters?.type !== undefined) {
     where.type = filters.type;
@@ -211,6 +253,25 @@ export async function getAllActions(
           },
         },
       },
+      company: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      contact: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       occurredAt: "desc",
@@ -219,14 +280,75 @@ export async function getAllActions(
     skip: options?.offset ?? 0,
   });
 
-  return actions as (OpportunityActionWithOpportunity & { companyId?: string | null })[];
+  return actions as OpportunityActionWithOpportunity[];
+}
+
+export async function getOpportunityActionById(
+  actionId: string,
+  userId: string
+): Promise<OpportunityActionWithOpportunity | null> {
+  const found = await prisma.opportunityAction.findFirst({
+    where: { id: actionId, userId },
+    include: {
+      contactChannel: {
+        select: {
+          id: true,
+          value: true,
+          label: true,
+        },
+      },
+      participants: {
+        include: {
+          contact: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+      workOpportunity: {
+        select: {
+          id: true,
+          title: true,
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+      company: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      contact: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  return found as OpportunityActionWithOpportunity | null;
 }
 
 export async function createOpportunityAction(
   userId: string,
-  data: OpportunityActionCreateInput & { workOpportunityId?: string; companyId?: string }
-): Promise<OpportunityActionWithOpportunity & { companyId?: string | null }> {
-  const { participantContactIds, workOpportunityId, companyId, ...actionData } = data;
+  data: OpportunityActionCreateInput & { workOpportunityId?: string; companyId?: string; contactId?: string }
+): Promise<OpportunityActionWithOpportunity> {
+  const { participantContactIds, workOpportunityId, companyId, contactId, ...actionData } = data;
 
   const { metadata, ...restActionData } = actionData;
   const action = await prisma.opportunityAction.create({
@@ -236,9 +358,10 @@ export async function createOpportunityAction(
       userId,
       workOpportunityId: workOpportunityId ?? undefined,
       companyId: companyId ?? undefined,
+      contactId: contactId ?? undefined,
       participants:
         participantContactIds && participantContactIds.length > 0
-          ? { create: participantContactIds.map((contactId) => ({ contactId })) }
+          ? { create: participantContactIds.map((id) => ({ contactId: id })) }
           : undefined,
     } as Prisma.OpportunityActionUncheckedCreateInput,
     include: {
@@ -272,10 +395,29 @@ export async function createOpportunityAction(
           },
         },
       },
+      company: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      contact: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
 
-  return action as OpportunityActionWithOpportunity & { companyId?: string | null };
+  return action as OpportunityActionWithOpportunity;
 }
 
 export async function updateOpportunityAction(
@@ -312,12 +454,13 @@ export async function updateOpportunityAction(
     }
   }
 
-  const { metadata, workOpportunityId, companyId, ...restActionData } = actionData;
+  const { metadata, workOpportunityId, companyId, contactId, ...restActionData } = actionData;
   const updateData: Prisma.OpportunityActionUncheckedUpdateInput = {
     ...restActionData,
     ...(metadata !== undefined ? { metadata: metadata as Prisma.InputJsonValue } : {}),
     ...(workOpportunityId !== undefined ? { workOpportunityId: workOpportunityId ?? undefined } : {}),
     ...(companyId !== undefined ? { companyId: companyId ?? undefined } : {}),
+    ...(contactId !== undefined ? { contactId: contactId ?? undefined } : {}),
   };
   const updated = await prisma.opportunityAction.update({
     where: { id: actionId },

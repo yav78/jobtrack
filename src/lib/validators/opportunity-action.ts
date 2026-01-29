@@ -20,6 +20,7 @@ export const opportunityActionCreateSchema = z.object({
   notes: z.string().optional(),
   workOpportunityId: z.string().uuid().nullable().optional(),
   companyId: z.string().uuid().nullable().optional(),
+  contactId: z.string().uuid().nullable().optional(),
   contactChannelId: z.string().uuid().optional(),
   channelTypeCode: z.string().optional(),
   participantContactIds: z.array(z.string().uuid()).optional(),
@@ -32,7 +33,9 @@ export const opportunityActionUpdateSchema = z.object({
   notes: z.string().optional(),
   workOpportunityId: z.string().uuid().nullable().optional(),
   companyId: z.string().uuid().nullable().optional(),
+  contactId: z.string().uuid().nullable().optional(),
   contactChannelId: z.string().uuid().optional().nullable(),
+  channelTypeCode: z.string().optional().nullable(),
   participantContactIds: z.array(z.string().uuid()).optional(),
   metadata: z.record(z.unknown()).optional(),
 });

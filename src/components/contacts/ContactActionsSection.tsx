@@ -5,7 +5,12 @@ import { ActionsListClient, type ActionsListClientHandle } from "@/components/ac
 import { StandaloneActionForm } from "@/components/actions/StandaloneActionForm";
 import type { OpportunityActionDTO } from "@/lib/dto/opportunity-action";
 
-export default function ActionsPage() {
+type Props = {
+  contactId: string;
+  companyId: string;
+};
+
+export function ContactActionsSection({ contactId, companyId }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [editingAction, setEditingAction] = useState<OpportunityActionDTO | null>(null);
   const listRef = useRef<ActionsListClientHandle>(null);
@@ -25,31 +30,30 @@ export default function ActionsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="card space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Actions</h1>
-          <p className="text-sm text-neutral-600 dark:text-neutral-300">
-            Toutes vos actions (prises de contact, entretiens, relances…) avec ou sans opportunité.
-          </p>
-        </div>
+        <h3 className="text-sm font-semibold">Actions avec ce contact</h3>
         <button
           type="button"
           onClick={() => setShowForm(true)}
-          className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+          className="rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700"
         >
-          Nouvelle action
+          Ajouter une action
         </button>
       </div>
 
-      <div className="card">
-        <ActionsListClient ref={listRef} onEdit={(action) => setEditingAction(action)} />
-      </div>
+      <ActionsListClient
+        ref={listRef}
+        contactId={contactId}
+        onEdit={(action) => setEditingAction(action)}
+      />
 
       <StandaloneActionForm
         open={showForm || !!editingAction}
         onClose={closeForm}
         onSuccess={handleSuccess}
+        defaultContactId={contactId}
+        defaultCompanyId={companyId}
         actionId={editingAction?.id}
         initialData={editingAction ?? undefined}
       />

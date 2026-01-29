@@ -28,35 +28,39 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const actions = await getOpportunityActions(id, userId, type ? { type } : undefined);
 
     // Transformer en DTO
-    const items = actions.map((action) => ({
-      id: action.id,
-      occurredAt: action.occurredAt.toISOString(),
-      type: action.type,
-      notes: action.notes,
-      metadata: action.metadata as Record<string, unknown> | null,
-      channelTypeCode: action.channelTypeCode,
-      userId: action.userId,
-      workOpportunityId: action.workOpportunityId ?? null,
-      companyId: (action as { companyId?: string | null }).companyId ?? null,
-      contactChannelId: action.contactChannelId,
-      createdAt: action.createdAt.toISOString(),
-      updatedAt: action.updatedAt.toISOString(),
-      contactChannel: action.contactChannel
-        ? {
-            id: action.contactChannel.id,
-            value: action.contactChannel.value,
-            label: action.contactChannel.label,
-          }
-        : undefined,
-      participants: action.participants.map((p) => ({
-        contactId: p.contactId,
-        contact: {
-          id: p.contact.id,
-          firstName: p.contact.firstName,
-          lastName: p.contact.lastName,
-        },
-      })),
-    }));
+    const items = actions.map((action) => {
+      const a = action as typeof action & { companyId?: string | null; contactId?: string | null };
+      return {
+        id: action.id,
+        occurredAt: action.occurredAt.toISOString(),
+        type: action.type,
+        notes: action.notes,
+        metadata: action.metadata as Record<string, unknown> | null,
+        channelTypeCode: action.channelTypeCode,
+        userId: action.userId,
+        workOpportunityId: action.workOpportunityId ?? null,
+        companyId: a.companyId ?? null,
+        contactId: a.contactId ?? null,
+        contactChannelId: action.contactChannelId,
+        createdAt: action.createdAt.toISOString(),
+        updatedAt: action.updatedAt.toISOString(),
+        contactChannel: action.contactChannel
+          ? {
+              id: action.contactChannel.id,
+              value: action.contactChannel.value,
+              label: action.contactChannel.label,
+            }
+          : undefined,
+        participants: action.participants.map((p) => ({
+          contactId: p.contactId,
+          contact: {
+            id: p.contact.id,
+            firstName: p.contact.firstName,
+            lastName: p.contact.lastName,
+          },
+        })),
+      };
+    });
 
     return jsonOk({ items });
   } catch (error) {
@@ -123,6 +127,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const action = await createOpportunityAction(userId, {
       ...rest,
       workOpportunityId: id,
+      contactId: rest.contactId ?? undefined,
     });
 
     // Transformer en DTO

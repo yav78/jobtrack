@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { ChannelForm } from "@/components/contacts/ChannelForm";
-import contactService from "@/lib/services/front/contact.service";
-import { getContact, getContacts } from "@/lib/services/back/contacts";
+import { ContactActionsSection } from "@/components/contacts/ContactActionsSection";
+import { getContact } from "@/lib/services/back/contacts";
 import { requireUserId } from "@/lib/api-helpers";
 
 type ContactDetail = {
@@ -27,14 +27,15 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">
-            {contact.firstName} {contact.lastName}
-          </h1>
-          {contact.roleTitle && <p className="text-sm text-neutral-600 dark:text-neutral-300">{contact.roleTitle}</p>}
-        </div>
+      <div>
+        <h1 className="text-2xl font-semibold">
+          {contact.firstName} {contact.lastName}
+        </h1>
+        {contact.roleTitle && <p className="text-sm text-neutral-600 dark:text-neutral-300">{contact.roleTitle}</p>}
       </div>
+
+      <ContactActionsSection contactId={contact.id} companyId={contact.companyId} />
+
       <div className="card space-y-3">
         <h3 className="text-sm font-semibold">Canaux</h3>
         <ul className="space-y-2 text-sm">

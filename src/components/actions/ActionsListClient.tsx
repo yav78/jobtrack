@@ -1,11 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import Link from "next/link";
 import { ACTION_TYPE_COLORS, ACTION_TYPE_LABELS } from "@/constants/opportunityActions";
 import type { OpportunityActionDTO } from "@/lib/dto/opportunity-action";
 import type { OpportunityActionType } from "@prisma/client";
 import { ActionDeleteButton } from "@/components/opportunities/ActionDeleteButton";
+
+export type ActionsListClientHandle = {
+  addAction: (action: OpportunityActionDTO) => void;
+  updateAction: (action: OpportunityActionDTO) => void;
+};
 
 const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
   { value: "INTERVIEW", label: "Entretien" },
@@ -23,18 +28,35 @@ const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
 
 type Props = {
   initialType?: string;
+  /** Filtrer par contact (ex. page contact) */
+  contactId?: string;
+  /** Callback pour ouvrir le formulaire en mode édition */
+  onEdit?: (action: OpportunityActionDTO) => void;
 };
 
-export function ActionsListClient({ initialType }: Props) {
+export const ActionsListClient = forwardRef<ActionsListClientHandle, Props>(function ActionsListClient(
+  { initialType, contactId, onEdit },
+  ref
+) {
   const [actions, setActions] = useState<OpportunityActionDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<string>(initialType ?? "");
+
+  useImperativeHandle(ref, () => ({
+    addAction(action: OpportunityActionDTO) {
+      setActions((prev) => [action, ...prev]);
+    },
+    updateAction(action: OpportunityActionDTO) {
+      setActions((prev) => prev.map((a) => (a.id === action.id ? action : a)));
+    },
+  }));
 
   const loadActions = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (typeFilter) params.set("type", typeFilter);
+      if (contactId) params.set("contactId", contactId);
       const res = await fetch(`/api/actions?${params.toString()}`);
       if (!res.ok) return;
       const data = await res.json();
@@ -48,7 +70,7 @@ export function ActionsListClient({ initialType }: Props) {
 
   useEffect(() => {
     loadActions();
-  }, [typeFilter]);
+  }, [typeFilter, contactId]);
 
   const onDeleted = () => {
     loadActions();
@@ -81,7 +103,7 @@ export function ActionsListClient({ initialType }: Props) {
           </select>
         </div>
         <div className="py-8 text-center text-sm text-neutral-500">
-          Aucune action enregistrée
+          {contactId ? "Aucune action avec ce contact" : "Aucune action enregistrée"}
         </div>
       </div>
     );
@@ -128,6 +150,18 @@ export function ActionsListClient({ initialType }: Props) {
                         timeStyle: "short",
                       })}
                     </span>
+                    {action.contact && (
+                      <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                        Avec{" "}
+                        <Link
+                          href={`/contacts/${action.contact.id}`}
+                          className="text-emerald-600 hover:underline dark:text-emerald-400"
+                        >
+                          {action.contact.firstName} {action.contact.lastName}
+                          {action.contact.company ? ` (${action.contact.company.name})` : ""}
+                        </Link>
+                      </span>
+                    )}
                     {action.workOpportunity && (
                       <Link
                         href={`/opportunities/${action.workOpportunity.id}`}
@@ -145,11 +179,22 @@ export function ActionsListClient({ initialType }: Props) {
                       </Link>
                     )}
                   </div>
-                  <ActionDeleteButton
-                    actionId={action.id}
-                    opportunityId={action.workOpportunityId ?? undefined}
-                    onDeleted={onDeleted}
-                  />
+                  <div className="flex items-center gap-2">
+                    {onEdit && (
+                      <button
+                        type="button"
+                        onClick={() => onEdit(action)}
+                        className="text-xs text-neutral-600 hover:underline dark:text-neutral-400"
+                      >
+                        Modifier
+                      </button>
+                    )}
+                    <ActionDeleteButton
+                      actionId={action.id}
+                      opportunityId={action.workOpportunityId ?? undefined}
+                      onDeleted={onDeleted}
+                    />
+                  </div>
                 </div>
 
                 {action.notes && (
@@ -179,4 +224,4 @@ export function ActionsListClient({ initialType }: Props) {
       </div>
     </div>
   );
-}
+});
