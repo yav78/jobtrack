@@ -88,6 +88,9 @@ export async function GET() {
               : undefined,
           }
         : undefined,
+      company: action.company
+        ? { id: action.company.id, name: action.company.name }
+        : undefined,
     }));
 
     return jsonOk({ stats, recentActions: recent });

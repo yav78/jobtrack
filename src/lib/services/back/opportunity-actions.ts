@@ -152,27 +152,34 @@ export async function getRecentOpportunityActions(
     take: limit,
   });
 
-  return actions;
+  return actions as (OpportunityActionWithOpportunity & { companyId?: string | null; company?: { id: string; name: string } | null })[];
 }
 
-export async function createOpportunityAction(
-  userId: string,
-  data: OpportunityActionCreateInput & { workOpportunityId: string }
-): Promise<OpportunityActionWithRelations> {
-  const { participantContactIds, ...actionData } = data;
+export type ListActionsFilters = {
+  workOpportunityId?: string;
+  companyId?: string;
+  type?: OpportunityActionType;
+};
 
-  const { metadata, ...restActionData } = actionData;
-  const action = await prisma.opportunityAction.create({
-    data: {
-      ...restActionData,
-      ...(metadata !== undefined ? { metadata: metadata as Prisma.InputJsonValue } : {}),
-      userId,
-      participants: participantContactIds && participantContactIds.length > 0
-        ? {
-            create: participantContactIds.map((contactId) => ({ contactId })),
-          }
-        : undefined,
-    },
+export async function getAllActions(
+  userId: string,
+  filters?: ListActionsFilters,
+  options?: { limit?: number; offset?: number }
+): Promise<(OpportunityActionWithOpportunity & { companyId?: string | null })[]> {
+  const where: Prisma.OpportunityActionWhereInput = { userId };
+
+  if (filters?.workOpportunityId !== undefined) {
+    where.workOpportunityId = filters.workOpportunityId;
+  }
+  if (filters?.companyId !== undefined) {
+    (where as Record<string, unknown>).companyId = filters.companyId;
+  }
+  if (filters?.type !== undefined) {
+    where.type = filters.type;
+  }
+
+  const actions = await prisma.opportunityAction.findMany({
+    where,
     include: {
       contactChannel: {
         select: {
@@ -192,10 +199,83 @@ export async function createOpportunityAction(
           },
         },
       },
+      workOpportunity: {
+        select: {
+          id: true,
+          title: true,
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      occurredAt: "desc",
+    },
+    take: options?.limit ?? 50,
+    skip: options?.offset ?? 0,
+  });
+
+  return actions as (OpportunityActionWithOpportunity & { companyId?: string | null })[];
+}
+
+export async function createOpportunityAction(
+  userId: string,
+  data: OpportunityActionCreateInput & { workOpportunityId?: string; companyId?: string }
+): Promise<OpportunityActionWithOpportunity & { companyId?: string | null }> {
+  const { participantContactIds, workOpportunityId, companyId, ...actionData } = data;
+
+  const { metadata, ...restActionData } = actionData;
+  const action = await prisma.opportunityAction.create({
+    data: {
+      ...restActionData,
+      ...(metadata !== undefined ? { metadata: metadata as Prisma.InputJsonValue } : {}),
+      userId,
+      workOpportunityId: workOpportunityId ?? undefined,
+      companyId: companyId ?? undefined,
+      participants:
+        participantContactIds && participantContactIds.length > 0
+          ? { create: participantContactIds.map((contactId) => ({ contactId })) }
+          : undefined,
+    } as Prisma.OpportunityActionUncheckedCreateInput,
+    include: {
+      contactChannel: {
+        select: {
+          id: true,
+          value: true,
+          label: true,
+        },
+      },
+      participants: {
+        include: {
+          contact: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+      workOpportunity: {
+        select: {
+          id: true,
+          title: true,
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
 
-  return action;
+  return action as OpportunityActionWithOpportunity & { companyId?: string | null };
 }
 
 export async function updateOpportunityAction(
@@ -232,13 +312,16 @@ export async function updateOpportunityAction(
     }
   }
 
-  const { metadata, ...restActionData } = actionData;
+  const { metadata, workOpportunityId, companyId, ...restActionData } = actionData;
+  const updateData: Prisma.OpportunityActionUncheckedUpdateInput = {
+    ...restActionData,
+    ...(metadata !== undefined ? { metadata: metadata as Prisma.InputJsonValue } : {}),
+    ...(workOpportunityId !== undefined ? { workOpportunityId: workOpportunityId ?? undefined } : {}),
+    ...(companyId !== undefined ? { companyId: companyId ?? undefined } : {}),
+  };
   const updated = await prisma.opportunityAction.update({
     where: { id: actionId },
-    data: {
-      ...restActionData,
-      ...(metadata !== undefined ? { metadata: metadata as Prisma.InputJsonValue } : {}),
-    },
+    data: updateData as Prisma.OpportunityActionUpdateInput,
     include: {
       contactChannel: {
         select: {

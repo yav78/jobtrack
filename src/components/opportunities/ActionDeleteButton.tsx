@@ -6,10 +6,12 @@ import { pushToast } from "@/components/common/Toast";
 
 type Props = {
   actionId: string;
-  opportunityId: string;
+  /** Si fourni, suppression via la route opportunité ; sinon via /api/actions/[actionId] */
+  opportunityId?: string;
+  onDeleted?: () => void;
 };
 
-export function ActionDeleteButton({ actionId, opportunityId }: Props) {
+export function ActionDeleteButton({ actionId, opportunityId, onDeleted }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -20,14 +22,16 @@ export function ActionDeleteButton({ actionId, opportunityId }: Props) {
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/opportunities/${opportunityId}/actions/${actionId}`, {
-        method: "DELETE",
-      });
+      const url = opportunityId
+        ? `/api/opportunities/${opportunityId}/actions/${actionId}`
+        : `/api/actions/${actionId}`;
+      const res = await fetch(url, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Erreur lors de la suppression");
       }
       pushToast({ type: "success", title: "Action supprimée" });
+      onDeleted?.();
       router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

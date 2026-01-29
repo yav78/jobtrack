@@ -46,6 +46,7 @@ model Company {
   contacts      Contact[]
   locations     Location[]
   opportunities WorkOpportunity[]
+  actions       OpportunityAction[]
 
   @@unique([userId, name])
 }
@@ -157,18 +158,21 @@ model OpportunityAction {
   metadata          Json?
   channelTypeCode   String?
   userId            String                     @db.Uuid
-  workOpportunityId String                     @db.Uuid
+  workOpportunityId String?                    @db.Uuid
+  companyId         String?                    @db.Uuid
   contactChannelId  String?                    @db.Uuid
   legacyEntretienId String?                    @unique
   createdAt         DateTime                   @default(now())
   updatedAt         DateTime                   @updatedAt
   contactChannel    ContactChannel?            @relation(fields: [contactChannelId], references: [id])
   user              User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workOpportunity   WorkOpportunity            @relation(fields: [workOpportunityId], references: [id], onDelete: Cascade)
+  workOpportunity   WorkOpportunity?           @relation(fields: [workOpportunityId], references: [id], onDelete: Cascade)
+  company           Company?                   @relation(fields: [companyId], references: [id], onDelete: SetNull)
   participants      OpportunityActionContact[]
 
   @@index([userId])
   @@index([workOpportunityId])
+  @@index([companyId])
   @@index([contactChannelId])
   @@index([type, occurredAt])
   @@index([channelTypeCode])

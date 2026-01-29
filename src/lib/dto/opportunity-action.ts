@@ -8,7 +8,8 @@ export type OpportunityActionDTO = {
   metadata: Record<string, unknown> | null;
   channelTypeCode: string | null;
   userId: string;
-  workOpportunityId: string;
+  workOpportunityId: string | null;
+  companyId: string | null;
   contactChannelId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -32,5 +33,9 @@ export type OpportunityActionDTO = {
       id: string;
       name: string;
     };
-  };
+  } | null;
+  company?: {
+    id: string;
+    name: string;
+  } | null;
 };

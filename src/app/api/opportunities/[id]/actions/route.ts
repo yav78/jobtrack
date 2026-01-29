@@ -36,7 +36,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       metadata: action.metadata as Record<string, unknown> | null,
       channelTypeCode: action.channelTypeCode,
       userId: action.userId,
-      workOpportunityId: action.workOpportunityId,
+      workOpportunityId: action.workOpportunityId ?? null,
+      companyId: (action as { companyId?: string | null }).companyId ?? null,
       contactChannelId: action.contactChannelId,
       createdAt: action.createdAt.toISOString(),
       updatedAt: action.updatedAt.toISOString(),
@@ -117,9 +118,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       }
     }
 
-    // Créer l'action
+    // Créer l'action (liée à cette opportunité ; on n'envoie pas companyId)
+    const { companyId: _omit, ...rest } = validatedData;
     const action = await createOpportunityAction(userId, {
-      ...validatedData,
+      ...rest,
       workOpportunityId: id,
     });
 
@@ -132,7 +134,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       metadata: action.metadata as Record<string, unknown> | null,
       channelTypeCode: action.channelTypeCode,
       userId: action.userId,
-      workOpportunityId: action.workOpportunityId,
+      workOpportunityId: action.workOpportunityId ?? null,
+      companyId: (action as { companyId?: string | null }).companyId ?? null,
       contactChannelId: action.contactChannelId,
       createdAt: action.createdAt.toISOString(),
       updatedAt: action.updatedAt.toISOString(),
