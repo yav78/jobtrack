@@ -8,12 +8,28 @@ import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
 import type { CompanyDTO } from "@/lib/dto/company";
 import companyService from "@/lib/services/front/company.service";
 import opportunityService from "@/lib/services/front/opportunity.service";
+import {
+  OPPORTUNITY_STATUS_LABELS,
+  OPPORTUNITY_STATUS_ORDER,
+} from "@/constants/opportunityStatus";
 
 type Props = {
   opportunity: WorkOpportunityDTO;
   onSuccess?: (data: WorkOpportunityDTO) => void;
   onCancel?: () => void;
 };
+
+function toDatetimeLocal(iso?: string | null): string {
+  if (!iso) return "";
+  // Convert ISO string to yyyy-MM-dd for date input
+  return iso.slice(0, 10);
+}
+
+function addDays(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
 
 export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props) {
   const [companies, setCompanies] = useState<CompanyDTO[]>([]);
@@ -23,14 +39,17 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
     title: opportunity.title,
     description: opportunity.description || "",
     companyId: opportunity.companyId || "",
+    status: opportunity.status || "SOURCING",
+    followUpAt: toDatetimeLocal(opportunity.followUpAt),
   });
 
-  // Mettre à jour le formulaire si l'opportunité change
   useEffect(() => {
     setForm({
       title: opportunity.title,
       description: opportunity.description || "",
       companyId: opportunity.companyId || "",
+      status: opportunity.status || "SOURCING",
+      followUpAt: toDatetimeLocal(opportunity.followUpAt),
     });
   }, [opportunity]);
 
@@ -51,6 +70,8 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
         title: form.title,
         description: form.description || undefined,
         companyId: form.companyId || undefined,
+        status: form.status,
+        followUpAt: form.followUpAt ? new Date(form.followUpAt).toISOString() : null,
       });
       pushToast({ type: "success", title: "Opportunité mise à jour" });
       onSuccess?.(data);
@@ -74,6 +95,22 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
             required
           />
         </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Statut</label>
+          <select
+            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            value={form.status}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+          >
+            {OPPORTUNITY_STATUS_ORDER.map((s) => (
+              <option key={s} value={s}>
+                {OPPORTUNITY_STATUS_LABELS[s]}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="space-y-1">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium">Entreprise</label>
@@ -98,6 +135,7 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
             ))}
           </select>
         </div>
+
         <div className="space-y-1">
           <label className="text-sm font-medium">Description</label>
           <textarea
@@ -107,6 +145,39 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
             rows={4}
           />
         </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Date de relance</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              className="flex-1 rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              value={form.followUpAt}
+              onChange={(e) => setForm({ ...form, followUpAt: e.target.value })}
+            />
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, followUpAt: "" })}
+              className="rounded border border-neutral-300 px-2 py-2 text-xs text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800"
+              aria-label="Effacer la date de relance"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex gap-1 pt-1">
+            {[3, 7, 14, 30].map((days) => (
+              <button
+                key={days}
+                type="button"
+                onClick={() => setForm({ ...form, followUpAt: addDays(days) })}
+                className="rounded border border-neutral-200 px-2 py-1 text-xs text-neutral-600 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800"
+              >
+                +{days}j
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="flex gap-2">
           <button
             type="submit"
@@ -138,4 +209,3 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
     </>
   );
 }
-

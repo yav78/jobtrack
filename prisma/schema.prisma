@@ -108,20 +108,33 @@ model ContactChannel {
 }
 
 model WorkOpportunity {
-  id          String              @id @default(uuid()) @db.Uuid
+  id          String                  @id @default(uuid()) @db.Uuid
   title       String
   description String?
-  companyId   String?             @db.Uuid
-  userId      String              @db.Uuid
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  status      WorkOpportunityStatus   @default(SOURCING)
+  followUpAt  DateTime?
+  companyId   String?                 @db.Uuid
+  userId      String                  @db.Uuid
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
   entretiens  Entretien[]
   actions     OpportunityAction[]
-  company     Company?            @relation(fields: [companyId], references: [id])
-  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company     Company?                @relation(fields: [companyId], references: [id])
+  user        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([companyId])
+  @@index([status])
+  @@index([followUpAt])
+}
+
+enum WorkOpportunityStatus {
+  SOURCING
+  APPLIED
+  INTERVIEW
+  OFFER_RECEIVED
+  OFFER_ACCEPTED
+  REJECTED
 }
 
 model Entretien {

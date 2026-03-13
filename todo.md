@@ -71,9 +71,9 @@ Légende : `[ ]` à faire · `[x]` fait · `[~]` en cours
 ## ✨ Nouvelles fonctionnalités
 
 ### Court terme
-- [ ] **Statut/pipeline des opportunités** — "Candidaté", "Entretien", "Offre reçue", "Refus" + vue filtrée par statut
-- [ ] **Recherche & filtres** sur les opportunités — titre, entreprise, statut, dates
-- [ ] **Rappels de suivi** — "Relancer dans X jours" sur une opportunité ou contact
+- [x] **Statut/pipeline des opportunités** — enum `WorkOpportunityStatus` (SOURCING→REJECTED) ajouté au schéma + migration. Badge coloré dans la table et la page détail. Sélecteur dans `OpportunityEditForm`.
+- [x] **Recherche & filtres** sur les opportunités — input search (filtre par titre) + pills de filtre par statut sur la page liste. Le service back filtre via `?q=` et `?status=`.
+- [x] **Rappels de suivi** — champ `followUpAt` (DateTime?) ajouté au schéma. Saisie date + raccourcis +3/7/14/30j dans `OpportunityEditForm`. Affichage ⚠ en rouge si en retard dans la table et la page détail.
 
 ### Moyen terme
 - [ ] **Export CSV** — opportunités, contacts, entreprises

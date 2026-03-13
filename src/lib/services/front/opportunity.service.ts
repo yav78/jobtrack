@@ -5,15 +5,21 @@ type OpportunityListResponse = { items?: WorkOpportunityDTO[]; total?: number; p
 
 export type OpportunityPage = { items: WorkOpportunityDTO[]; total: number; page: number; pageSize: number };
 
+export type OpportunityFilters = {
+  q?: string;
+  status?: string;
+};
+
 class OpportunityService extends AbstractCrudService {
   constructor() {
     super("opportunities");
   }
 
-  async list(page = 1, pageSize = 20): Promise<OpportunityPage> {
-    const data = await frontFetchJson<OpportunityListResponse>(
-      `${this.basePath}?page=${page}&pageSize=${pageSize}`
-    );
+  async list(page = 1, pageSize = 20, filters?: OpportunityFilters): Promise<OpportunityPage> {
+    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (filters?.q) params.set("q", filters.q);
+    if (filters?.status) params.set("status", filters.status);
+    const data = await frontFetchJson<OpportunityListResponse>(`${this.basePath}?${params.toString()}`);
     return {
       items: data.items ?? [],
       total: data.total ?? 0,

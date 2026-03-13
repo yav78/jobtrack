@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { opportunityCreateSchema, opportunityUpdateSchema } from "@/lib/validators/opportunity";
 import { NotFound } from "@/lib/errors";
 import type { z } from "zod";
-import type { Contact, ContactChannel, Entretien, WorkOpportunity, Prisma } from "@prisma/client";
+import type { Contact, ContactChannel, Entretien, WorkOpportunity, WorkOpportunityStatus, Prisma } from "@prisma/client";
 
 type OpportunityCreateInput = z.infer<typeof opportunityCreateSchema>;
 type OpportunityUpdateInput = z.infer<typeof opportunityUpdateSchema>;
@@ -16,12 +16,16 @@ type OpportunityWithRelations = Prisma.WorkOpportunityGetPayload<{
   };
 }>;
 
-export async function getOpportunities(userId: string, options?: { page?: number; pageSize?: number; q?: string }) {
+export async function getOpportunities(
+  userId: string,
+  options?: { page?: number; pageSize?: number; q?: string; status?: string }
+) {
   const page = options?.page ?? 1;
   const pageSize = options?.pageSize ?? 10;
-  const where = {
+  const where: Prisma.WorkOpportunityWhereInput = {
     userId,
-    ...(options?.q ? { title: { contains: options.q, mode: "insensitive" as const } } : {}),
+    ...(options?.q ? { title: { contains: options.q, mode: "insensitive" } } : {}),
+    ...(options?.status ? { status: options.status as WorkOpportunityStatus } : {}),
   };
   const [items, total] = await Promise.all([
     prisma.workOpportunity.findMany({

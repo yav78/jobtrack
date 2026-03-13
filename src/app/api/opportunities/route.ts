@@ -6,7 +6,8 @@ export async function GET(req: Request) {
   try {
     const userId = await requireUserId();
     const { page, pageSize, q } = parsePagination(req);
-    const result = await getOpportunities(userId, { page, pageSize, q });
+    const status = new URL(req.url).searchParams.get("status") ?? undefined;
+    const result = await getOpportunities(userId, { page, pageSize, q, status });
     return jsonOk(result);
   } catch (error) {
     return handleRouteError(error);
