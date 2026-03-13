@@ -1,5 +1,5 @@
 import { jsonCreated, jsonOk } from "@/lib/errors/response";
-import { handleRouteError, parsePagination, requireUserId } from "@/lib/api-helpers";
+import { handleRouteError, parsePagination, requireJson, requireUserId } from "@/lib/api-helpers";
 import { getOpportunities, createOpportunity } from "@/lib/services/back/opportunities";
 
 export async function GET(req: Request) {
@@ -15,6 +15,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    requireJson(req);
     const userId = await requireUserId();
     const body = await req.json();
     const opp = await createOpportunity(userId, body);

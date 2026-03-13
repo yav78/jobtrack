@@ -6,9 +6,7 @@ import { getAllCompanies } from "@/lib/services/back/companies";
 
 export default async function CompaniesPage() {
   // const companies: CompanyDTO[] = await companyService.list();
-  // console.log("companies", companies);
   const companies = await getAllCompanies() as unknown as CompanyDTO[];
-  console.log("companies", companies);
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

@@ -39,24 +39,7 @@ async function safeJson(res: Response) {
 export function absoluteUrl(path: string) {
   if (path.startsWith("http")) return path;
   
-  let base = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL;
-  console.log("process.env.NEXT_PUBLIC_BASE_URL", process.env.NEXT_PUBLIC_BASE_URL);
-  console.log("process.env.VERCEL_URL", process.env.VERCEL_URL);
-  console.log("path", path);
-  console.log("base", base);
-  
-  // S'assurer que la base a un protocole
-  // if (!base.startsWith("http://") && !base.startsWith("https://")) {
-  //   // Si c'est VERCEL_URL, utiliser https par défaut
-  //   if (process.env.VERCEL_URL) {
-  //     base = `https://${base}`;
-  //   } else {
-  //     base = `http://${base}`;
-  //   }
-  // }
-  
-  const result = new URL(path, base).toString();
-  console.log("result url absolute", result);
-  return result;
+  const base = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL;
+  return new URL(path, base).toString();
 }
 

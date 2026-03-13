@@ -1,5 +1,5 @@
 import { jsonOk } from "@/lib/errors/response";
-import { handleRouteError, requireUserId } from "@/lib/api-helpers";
+import { handleRouteError, requireJson, requireUserId } from "@/lib/api-helpers";
 import {
   deleteOpportunityAction,
   updateOpportunityAction,
@@ -42,6 +42,7 @@ export async function PATCH(
       return handleRouteError(new Error("Action ID is required"));
     }
 
+    requireJson(req);
     const body = await req.json();
     const validatedData = opportunityActionUpdateSchema.parse(body);
 

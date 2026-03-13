@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { companyCreateSchema, companyUpdateSchema } from "@/lib/validators/company";
+import { NotFound } from "@/lib/errors";
 import type { z } from "zod";
 import { requireUserId } from "../../api-helpers";
 
@@ -54,7 +55,7 @@ export async function getCompany(id: string, userId: string) {
     where: { id, userId },
     include: { locations: true, contacts: true },
   });
-  if (!company) throw new Error("Not found");
+  if (!company) throw NotFound("Company not found");
   return company;
 }
 

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { NotFound } from "@/lib/errors";
 import type { OpportunityActionType, Prisma } from "@prisma/client";
 import type { OpportunityActionCreateInput, OpportunityActionUpdateInput } from "../types";
 
@@ -433,7 +434,7 @@ export async function updateOpportunityAction(
   });
 
   if (!existing) {
-    throw new Error("Action not found");
+    throw NotFound("Action not found");
   }
 
   // Mettre à jour les participants si fournis
@@ -496,7 +497,7 @@ export async function deleteOpportunityAction(actionId: string, userId: string) 
   });
 
   if (!existing) {
-    throw new Error("Action not found");
+    throw NotFound("Action not found");
   }
 
   await prisma.opportunityAction.delete({

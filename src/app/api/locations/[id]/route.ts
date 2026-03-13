@@ -1,9 +1,10 @@
-import { jsonError, jsonOk } from "@/lib/errors/response";
-import { handleRouteError, requireUserId } from "@/lib/api-helpers";
+import { jsonOk } from "@/lib/errors/response";
+import { handleRouteError, requireJson, requireUserId } from "@/lib/api-helpers";
 import { updateLocation, deleteLocation } from "@/lib/services/back/locations";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {
+    requireJson(req);
     const userId = await requireUserId();
     const body = await req.json();
     const { id } = params instanceof Promise ? await params : params;
@@ -21,7 +22,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
     const result = await deleteLocation(id, userId);
     return jsonOk(result);
   } catch (error) {
-    return jsonError(error);
+    return handleRouteError(error);
   }
 }
 

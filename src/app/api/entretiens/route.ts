@@ -1,5 +1,5 @@
 import { jsonCreated, jsonOk } from "@/lib/errors/response";
-import { handleRouteError, parsePagination, requireUserId } from "@/lib/api-helpers";
+import { handleRouteError, parsePagination, requireJson, requireUserId } from "@/lib/api-helpers";
 import { getEntretiens, createEntretien } from "@/lib/services/back/entretiens";
 
 export async function GET(req: Request) {
@@ -17,6 +17,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    requireJson(req);
     const userId = await requireUserId();
     const body = await req.json();
     const entretien = await createEntretien(userId, body);

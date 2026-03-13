@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { locationCreateSchema, locationUpdateSchema } from "@/lib/validators/company";
+import { NotFound } from "@/lib/errors";
 import type { z } from "zod";
 
 type LocationCreateInput = z.infer<typeof locationCreateSchema>;
@@ -9,7 +10,7 @@ export async function createLocation(companyId: string, userId: string, data: Lo
   const validatedData = locationCreateSchema.parse(data);
   const company = await prisma.company.findFirst({ where: { id: companyId, userId } });
   if (!company) {
-    throw new Error("Not found");
+    throw NotFound("Company not found");
   }
   const location = await prisma.$transaction(async (tx) => {
     if (validatedData.isPrimary) {
@@ -31,7 +32,7 @@ export async function updateLocation(id: string, userId: string, data: LocationU
     where: { id, company: { userId } },
     include: { company: true },
   });
-  if (!location) throw new Error("Not found");
+  if (!location) throw NotFound("Location not found");
 
   const updated = await prisma.$transaction(async (tx) => {
     if (validatedData.isPrimary === true) {

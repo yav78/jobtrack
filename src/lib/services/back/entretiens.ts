@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { entretienCreateSchema, entretienUpdateSchema } from "@/lib/validators/entretien";
+import { NotFound } from "@/lib/errors";
 import type { z } from "zod";
 
 type EntretienCreateInput = z.infer<typeof entretienCreateSchema>;
@@ -34,12 +35,12 @@ export async function createEntretien(userId: string, data: EntretienCreateInput
   const opp = await prisma.workOpportunity.findFirst({
     where: { id: validatedData.workOpportunityId, userId },
   });
-  if (!opp) throw new Error("Not found");
+  if (!opp) throw NotFound("Opportunity not found");
 
   const channel = await prisma.contactChannel.findFirst({
     where: { id: validatedData.contactChannelId, contact: { company: { userId } } },
   });
-  if (!channel) throw new Error("Not found");
+  if (!channel) throw NotFound("Contact channel not found");
 
   const entretien = await prisma.entretien.create({
     data: {
@@ -61,7 +62,7 @@ export async function getEntretien(id: string, userId: string) {
     where: { id, userId },
     include: { contacts: true, contactChannel: true, workOpportunity: true },
   });
-  if (!entretien) throw new Error("Not found");
+  if (!entretien) throw NotFound("Entretien not found");
   return entretien;
 }
 
@@ -72,13 +73,13 @@ export async function updateEntretien(id: string, userId: string, data: Entretie
     const opp = await prisma.workOpportunity.findFirst({
       where: { id: validatedData.workOpportunityId, userId },
     });
-    if (!opp) throw new Error("Not found");
+    if (!opp) throw NotFound("Opportunity not found");
   }
   if (validatedData.contactChannelId) {
     const ch = await prisma.contactChannel.findFirst({
       where: { id: validatedData.contactChannelId, contact: { company: { userId } } },
     });
-    if (!ch) throw new Error("Not found");
+    if (!ch) throw NotFound("Contact channel not found");
   }
 
   const updated = await prisma.entretien.update({

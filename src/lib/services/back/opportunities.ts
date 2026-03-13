@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { opportunityCreateSchema, opportunityUpdateSchema } from "@/lib/validators/opportunity";
+import { NotFound } from "@/lib/errors";
 import type { z } from "zod";
 import type { Contact, ContactChannel, Entretien, WorkOpportunity, Prisma } from "@prisma/client";
 
@@ -39,7 +40,7 @@ export async function createOpportunity(userId: string, data: OpportunityCreateI
   const validatedData = opportunityCreateSchema.parse(data);
   if (validatedData.companyId) {
     const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId } });
-    if (!company) throw new Error("Not found");
+    if (!company) throw NotFound("Company not found");
   }
   const opp = await prisma.workOpportunity.create({
     data: { ...validatedData, userId },
@@ -66,7 +67,7 @@ export async function updateOpportunity(id: string, userId: string, data: Opport
   const validatedData = opportunityUpdateSchema.parse(data);
   if (validatedData.companyId) {
     const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId } });
-    if (!company) throw new Error("Not found");
+    if (!company) throw NotFound("Company not found");
   }
   const updated = await prisma.workOpportunity.update({
     where: { id, userId },

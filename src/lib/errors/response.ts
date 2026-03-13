@@ -13,7 +13,11 @@ export function jsonCreated(data: ResponseData, init?: ResponseInit) {
 
 export function jsonError(error: unknown) {
   if (error instanceof HttpError) {
-    return NextResponse.json({ error: error.message, details: error.details }, { status: error.status });
+    const body: { error: string; details?: unknown } = { error: error.message };
+    if (process.env.NODE_ENV !== "production" && error.details !== undefined) {
+      body.details = error.details;
+    }
+    return NextResponse.json(body, { status: error.status });
   }
   return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
 }

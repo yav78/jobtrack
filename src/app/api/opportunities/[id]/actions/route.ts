@@ -1,5 +1,5 @@
 import { jsonCreated, jsonOk } from "@/lib/errors/response";
-import { handleRouteError, requireUserId } from "@/lib/api-helpers";
+import { handleRouteError, requireJson, requireUserId } from "@/lib/api-helpers";
 import { getOpportunityActions, createOpportunityAction } from "@/lib/services/back/opportunity-actions";
 import { opportunityActionCreateSchema } from "@/lib/validators/opportunity-action";
 import { prisma } from "@/lib/prisma";
@@ -70,6 +70,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {
+    requireJson(req);
     const userId = await requireUserId();
     const body = await req.json();
     const { id } = params instanceof Promise ? await params : params;

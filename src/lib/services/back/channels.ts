@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { contactChannelCreateSchema, contactChannelUpdateSchema } from "@/lib/validators/channel";
+import { NotFound } from "@/lib/errors";
 import type { z } from "zod";
 
 type ChannelCreateInput = z.infer<typeof contactChannelCreateSchema>;
@@ -10,7 +11,7 @@ export async function createChannel(contactId: string, userId: string, data: Cha
   const contact = await prisma.contact.findFirst({
     where: { id: contactId, company: { userId } },
   });
-  if (!contact) throw new Error("Not found");
+  if (!contact) throw NotFound("Contact not found");
 
   const channel = await prisma.$transaction(async (tx) => {
     if (validatedData.isPrimary) {
@@ -32,7 +33,7 @@ export async function updateChannel(id: string, userId: string, data: ChannelUpd
   const channel = await prisma.contactChannel.findFirst({
     where: { id, contact: { company: { userId } } },
   });
-  if (!channel) throw new Error("Not found");
+  if (!channel) throw NotFound("Channel not found");
 
   const updated = await prisma.$transaction(async (tx) => {
     if (validatedData.isPrimary === true) {

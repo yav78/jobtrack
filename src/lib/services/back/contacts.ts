@@ -1,6 +1,7 @@
 import { requireUserId } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 import { contactCreateSchema, contactUpdateSchema } from "@/lib/validators/contact";
+import { NotFound } from "@/lib/errors";
 import type { z } from "zod";
 
 type ContactCreateInput = z.infer<typeof contactCreateSchema>;
@@ -48,7 +49,7 @@ export async function createContact(userId: string, data: ContactCreateInput) {
   const validatedData = contactCreateSchema.parse(data);
   // Ensure company belongs to user
   const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId } });
-  if (!company) throw new Error("Not found");
+  if (!company) throw NotFound("Company not found");
   const contact = await prisma.contact.create({ data: validatedData });
   return contact;
 }
@@ -58,7 +59,7 @@ export async function getContact(id: string, userId: string) {
     where: { id, company: { userId } },
     include: { channels: true },
   });
-  if (!contact) throw new Error("Not found");
+  if (!contact) throw NotFound("Contact not found");
   return contact;
 }
 
