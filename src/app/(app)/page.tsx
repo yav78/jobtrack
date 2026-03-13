@@ -1,7 +1,9 @@
 import { ACTION_TYPE_COLORS, ACTION_TYPE_LABELS, ACTION_TYPE_ORDER } from "@/constants/opportunityActions";
+import { OPPORTUNITY_STATUS_LABELS, OPPORTUNITY_STATUS_COLORS, OPPORTUNITY_STATUS_ORDER } from "@/constants/opportunityStatus";
 import type { OpportunityActionDTO } from "@/lib/dto/opportunity-action";
 import type { OpportunityActionType } from "@prisma/client";
 import { getDashboardOverview, type DashboardResponse } from "@/lib/services/front/dashboard.service";
+import Link from "next/link";
 
 const EMPTY_STATS: DashboardResponse["stats"] = {
   companies: 0,
@@ -11,6 +13,8 @@ const EMPTY_STATS: DashboardResponse["stats"] = {
   actionsTotal: 0,
   actionsLast30Days: 0,
   actionsByType: [],
+  opportunitiesByStatus: [],
+  upcomingFollowUps: [],
 };
 
 async function fetchDashboard(): Promise<DashboardResponse> {
@@ -32,6 +36,13 @@ export default async function Home() {
     count: actionTypeCounts.get(type) ?? 0,
   })).filter((item) => item.count > 0);
   const maxTypeCount = actionTypeItems.length > 0 ? Math.max(...actionTypeItems.map((item) => item.count)) : 0;
+
+  const statusCounts = new Map(stats.opportunitiesByStatus.map((e) => [e.status, e.count]));
+  const statusItems = OPPORTUNITY_STATUS_ORDER.map((s) => ({
+    status: s,
+    count: statusCounts.get(s as Parameters<typeof statusCounts.get>[0]) ?? 0,
+  }));
+  const maxStatusCount = statusItems.length > 0 ? Math.max(...statusItems.map((i) => i.count)) : 0;
 
   const statCards = [
     { label: "Actions (total)", value: stats.actionsTotal },
@@ -139,6 +150,62 @@ export default async function Home() {
         </div>
 
         <div className="space-y-4">
+          {/* Pipeline par statut */}
+          <div className="card space-y-3">
+            <div>
+              <h3 className="text-lg font-semibold">Pipeline</h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                Opportunités actives par statut.
+              </p>
+            </div>
+            {stats.opportunities === 0 ? (
+              <div className="py-4 text-sm text-neutral-500">Aucune opportunité.</div>
+            ) : (
+              <div className="space-y-3">
+                {statusItems.map((item) => (
+                  <div key={item.status} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className={`rounded px-2 py-0.5 text-xs font-medium ${OPPORTUNITY_STATUS_COLORS[item.status] ?? ""}`}>
+                        {OPPORTUNITY_STATUS_LABELS[item.status] ?? item.status}
+                      </span>
+                      <span className="text-xs text-neutral-500 dark:text-neutral-400">{item.count}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-neutral-200 dark:bg-neutral-800">
+                      <div
+                        className="h-2 rounded-full bg-emerald-500"
+                        style={{ width: maxStatusCount > 0 ? `${(item.count / maxStatusCount) * 100}%` : "0%" }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Relances à venir */}
+          {stats.upcomingFollowUps.length > 0 && (
+            <div className="card space-y-3">
+              <div>
+                <h3 className="text-lg font-semibold">Relances à venir</h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">Dans les 7 prochains jours.</p>
+              </div>
+              <div className="space-y-2">
+                {stats.upcomingFollowUps.map((o) => (
+                  <div key={o.id} className="flex items-center justify-between text-sm">
+                    <Link href={`/opportunities/${o.id}`} className="hover:underline truncate max-w-[60%]">
+                      {o.title}
+                    </Link>
+                    <span className={o.isOverdue ? "text-red-600 dark:text-red-400 text-xs font-medium" : "text-xs text-neutral-500"}>
+                      {o.isOverdue ? "⚠ " : ""}
+                      {new Date(o.followUpAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Répartition des actions */}
           <div className="card space-y-3">
             <div>
               <h3 className="text-lg font-semibold">Répartition des actions</h3>

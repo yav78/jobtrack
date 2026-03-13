@@ -11,15 +11,21 @@ export async function GET() {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    const now = new Date();
+    const sevenDaysLater = new Date();
+    sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+
     const [
       [companies, contacts, opportunities, entretiens, actionsTotal, actionsLast30Days],
       actionsByType,
       recentActions,
+      opportunitiesByStatus,
+      upcomingFollowUps,
     ] = await Promise.all([
       prisma.$transaction([
-        prisma.company.count({ where: { userId } }),
-        prisma.contact.count({ where: { company: { userId } } }),
-        prisma.workOpportunity.count({ where: { userId } }),
+        prisma.company.count({ where: { userId, deletedAt: null } }),
+        prisma.contact.count({ where: { deletedAt: null, company: { userId, deletedAt: null } } }),
+        prisma.workOpportunity.count({ where: { userId, deletedAt: null } }),
         prisma.entretien.count({ where: { userId } }),
         prisma.opportunityAction.count({ where: { userId } }),
         prisma.opportunityAction.count({
@@ -35,6 +41,17 @@ export async function GET() {
         where: { userId },
       }),
       getRecentOpportunityActions(userId, 20),
+      prisma.workOpportunity.groupBy({
+        by: ["status"],
+        _count: { _all: true },
+        where: { userId, deletedAt: null },
+      }),
+      prisma.workOpportunity.findMany({
+        where: { userId, deletedAt: null, followUpAt: { lte: sevenDaysLater, not: null } },
+        orderBy: { followUpAt: "asc" },
+        take: 10,
+        select: { id: true, title: true, followUpAt: true, status: true },
+      }),
     ]);
 
     const stats = {
@@ -47,6 +64,17 @@ export async function GET() {
       actionsByType: actionsByType.map((item: { type: OpportunityActionType; _count: { _all: number } }) => ({
         type: item.type,
         count: item._count._all,
+      })),
+      opportunitiesByStatus: opportunitiesByStatus.map((item) => ({
+        status: item.status,
+        count: item._count._all,
+      })),
+      upcomingFollowUps: upcomingFollowUps.map((o) => ({
+        id: o.id,
+        title: o.title,
+        status: o.status,
+        followUpAt: o.followUpAt!.toISOString(),
+        isOverdue: o.followUpAt! < now,
       })),
     };
 

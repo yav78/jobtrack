@@ -7,6 +7,8 @@ import type { z } from "zod";
 type ContactCreateInput = z.infer<typeof contactCreateSchema>;
 type ContactUpdateInput = z.infer<typeof contactUpdateSchema>;
 
+const ACTIVE = { deletedAt: null } as const;
+
 export async function getContacts(
   userId: string,
   options?: { page?: number; pageSize?: number; q?: string; companyId?: string }
@@ -14,7 +16,8 @@ export async function getContacts(
   const page = options?.page ?? 1;
   const pageSize = options?.pageSize ?? 10;
   const where = {
-    company: { userId },
+    ...ACTIVE,
+    company: { userId, ...ACTIVE },
     ...(options?.companyId ? { companyId: options.companyId } : {}),
     ...(options?.q
       ? {
@@ -41,22 +44,27 @@ export async function getContacts(
 
 export async function getAllContacts() {
   const userId = await requireUserId();
-  const contacts = await prisma.contact.findMany({ where: { company: { userId } } });
-  return contacts;
+  return prisma.contact.findMany({ where: { ...ACTIVE, company: { userId, ...ACTIVE } } });
+}
+
+export async function getAllContactsForExport(userId: string) {
+  return prisma.contact.findMany({
+    where: { ...ACTIVE, company: { userId, ...ACTIVE } },
+    include: { company: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 export async function createContact(userId: string, data: ContactCreateInput) {
   const validatedData = contactCreateSchema.parse(data);
-  // Ensure company belongs to user
-  const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId } });
+  const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId, ...ACTIVE } });
   if (!company) throw NotFound("Company not found");
-  const contact = await prisma.contact.create({ data: validatedData });
-  return contact;
+  return prisma.contact.create({ data: validatedData });
 }
 
 export async function getContact(id: string, userId: string) {
   const contact = await prisma.contact.findFirst({
-    where: { id, company: { userId } },
+    where: { id, ...ACTIVE, company: { userId } },
     include: { channels: true },
   });
   if (!contact) throw NotFound("Contact not found");
@@ -65,16 +73,20 @@ export async function getContact(id: string, userId: string) {
 
 export async function updateContact(id: string, userId: string, data: ContactUpdateInput) {
   const validatedData = contactUpdateSchema.parse(data);
-  const updated = await prisma.contact.update({
-    where: { id, company: { userId } },
-    data: validatedData,
-  });
-  return updated;
+  return prisma.contact.update({ where: { id, company: { userId } }, data: validatedData });
 }
 
 export async function deleteContact(id: string, userId: string) {
-  await prisma.contact.delete({ where: { id, company: { userId } } });
+  const contact = await prisma.contact.findFirst({ where: { id, company: { userId }, ...ACTIVE } });
+  if (!contact) throw NotFound("Contact not found");
+  await prisma.contact.update({ where: { id }, data: { deletedAt: new Date() } });
   return { success: true };
 }
 
-
+export async function deleteManyContacts(ids: string[], userId: string) {
+  await prisma.contact.updateMany({
+    where: { id: { in: ids }, company: { userId }, deletedAt: null },
+    data: { deletedAt: new Date() },
+  });
+  return { success: true };
+}

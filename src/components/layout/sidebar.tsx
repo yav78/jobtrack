@@ -11,6 +11,7 @@ const navItems = [
   { href: "/opportunities", label: "Opportunités" },
   { href: "/actions", label: "Actions" },
   { href: "/entretiens/new", label: "Nouvel entretien" },
+  { href: "/trash", label: "Corbeille" },
 ];
 
 export function SideBar() {

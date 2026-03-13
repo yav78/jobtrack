@@ -10,6 +10,9 @@ import {
 
 type Props = {
   data: WorkOpportunityDTO[];
+  selectable?: boolean;
+  selectedIds?: Set<string>;
+  onSelectionChange?: (ids: Set<string>) => void;
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -44,11 +47,14 @@ function FollowUpCell({ followUpAt }: { followUpAt?: string | null }) {
   );
 }
 
-export function OpportunitiesTable({ data }: Props) {
+export function OpportunitiesTable({ data, selectable, selectedIds, onSelectionChange }: Props) {
   return (
     <DataTable
       data={data}
       empty="Aucune opportunité. Utilisez le formulaire à droite pour en créer une."
+      selectable={selectable}
+      selectedIds={selectedIds}
+      onSelectionChange={onSelectionChange}
       columns={[
         {
           header: "Titre",

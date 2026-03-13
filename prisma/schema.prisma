@@ -39,6 +39,7 @@ model Company {
   website       String?
   notes         String?
   userId        String            @db.Uuid
+  deletedAt     DateTime?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   companyType   CompanyType       @relation(fields: [typeCode], references: [code])
@@ -77,6 +78,7 @@ model Contact {
   roleTitle         String?
   notes             String?
   basedAtLocationId String?                    @db.Uuid
+  deletedAt         DateTime?
   createdAt         DateTime                   @default(now())
   updatedAt         DateTime                   @updatedAt
   basedAt           Location?                  @relation("ContactLocation", fields: [basedAtLocationId], references: [id])
@@ -113,6 +115,7 @@ model WorkOpportunity {
   description String?
   status      WorkOpportunityStatus   @default(SOURCING)
   followUpAt  DateTime?
+  deletedAt   DateTime?
   companyId   String?                 @db.Uuid
   userId      String                  @db.Uuid
   createdAt   DateTime                @default(now())

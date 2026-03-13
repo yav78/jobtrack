@@ -76,10 +76,10 @@ Légende : `[ ]` à faire · `[x]` fait · `[~]` en cours
 - [x] **Rappels de suivi** — champ `followUpAt` (DateTime?) ajouté au schéma. Saisie date + raccourcis +3/7/14/30j dans `OpportunityEditForm`. Affichage ⚠ en rouge si en retard dans la table et la page détail.
 
 ### Moyen terme
-- [ ] **Export CSV** — opportunités, contacts, entreprises
-- [ ] **Dashboard enrichi** — taux de réponse, temps moyen avant entretien, entonnoir candidature→offre
-- [ ] **Soft deletes** — corbeille avec restauration
-- [ ] **Actions en masse** — sélection multiple pour supprimer/archiver
+- [x] **Export CSV** — opportunités, contacts, entreprises (routes `/api/export/*`, bouton ExportButton sur chaque liste)
+- [x] **Dashboard enrichi** — pipeline par statut, relances à venir (7j), répartition actions
+- [x] **Soft deletes** — corbeille avec restauration (`/trash`, `/api/trash`, back service + `deletedAt` sur Company/Contact/WorkOpportunity)
+- [x] **Actions en masse** — sélection multiple pour supprimer (DataTable selectable, `/api/*/bulk`, pages entreprises/contacts/opportunités)
 
 ### Long terme
 - [ ] **Intégration email** — relance directement depuis une opportunité/contact

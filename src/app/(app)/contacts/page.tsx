@@ -2,10 +2,12 @@
 import { ContactForm } from "@/components/contacts/ContactForm";
 import { ContactsTable } from "@/components/contacts/ContactsTable";
 import { Pagination } from "@/components/common/Pagination";
+import { ExportButton } from "@/components/common/ExportButton";
 import { ContactDTO } from "@/lib/dto/contact";
 
 import contactService from "@/lib/services/front/contact.service";
 import { useEffect, useState } from "react";
+import { frontFetchJson } from "@/lib/services/front/abstract-crus.service";
 
 const PAGE_SIZE = 20;
 
@@ -36,6 +38,8 @@ export default function ContactsPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const load = async (p: number) => {
     try {
@@ -45,6 +49,7 @@ export default function ContactsPage() {
       setContacts(convertToContactRow(data.items));
       setTotal(data.total);
       setPage(data.page);
+      setSelectedIds(new Set());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur lors du chargement des contacts.");
     } finally {
@@ -56,6 +61,23 @@ export default function ContactsPage() {
     load(1);
   }, []);
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Supprimer ${selectedIds.size} contact(s) ?`)) return;
+    try {
+      setBulkLoading(true);
+      await frontFetchJson("/api/contacts/bulk", {
+        method: "POST",
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+      await load(page);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur lors de la suppression.");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -63,9 +85,25 @@ export default function ContactsPage() {
           <h1 className="text-2xl font-semibold">Contacts</h1>
           <p className="text-sm text-neutral-600 dark:text-neutral-300">Liste des contacts et création rapide.</p>
         </div>
+        <ExportButton href="/api/export/contacts" label="Exporter CSV" />
       </div>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-        <div className="card">
+        <div className="card space-y-3">
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                {selectedIds.size} sélectionné(s)
+              </span>
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                disabled={bulkLoading}
+                className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                Supprimer la sélection
+              </button>
+            </div>
+          )}
           {loading ? (
             <div className="space-y-2 animate-pulse">
               {[...Array(5)].map((_, i) => (
@@ -78,7 +116,12 @@ export default function ContactsPage() {
             </div>
           ) : (
             <>
-              <ContactsTable data={contacts} />
+              <ContactsTable
+                data={contacts}
+                selectable
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
+              />
               <Pagination page={page} pageSize={PAGE_SIZE} total={total} onPageChange={load} />
             </>
           )}

@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { OpportunityForm } from "@/components/opportunities/OpportunityForm";
 import { OpportunitiesTable } from "@/components/opportunities/OpportunitiesTable";
 import { Pagination } from "@/components/common/Pagination";
+import { ExportButton } from "@/components/common/ExportButton";
 import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
 import opportunityService from "@/lib/services/front/opportunity.service";
+import { frontFetchJson } from "@/lib/services/front/abstract-crus.service";
 import {
   OPPORTUNITY_STATUS_LABELS,
   OPPORTUNITY_STATUS_COLORS,
@@ -28,6 +30,8 @@ export default function OpportunitiesPage() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const loadOpportunities = useCallback(
     async (p: number, q: string, status: string) => {
@@ -41,6 +45,7 @@ export default function OpportunitiesPage() {
         setOpportunities(data.items);
         setTotal(data.total);
         setPage(data.page);
+        setSelectedIds(new Set());
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur lors du chargement des opportunités.");
       } finally {
@@ -52,13 +57,29 @@ export default function OpportunitiesPage() {
 
   useEffect(() => {
     loadOpportunities(1, search, statusFilter);
-    // search & statusFilter changes reset to page 1
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, statusFilter]);
 
   const handleSuccess = async () => {
     await loadOpportunities(1, search, statusFilter);
     router.refresh();
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Supprimer ${selectedIds.size} opportunité(s) ?`)) return;
+    try {
+      setBulkLoading(true);
+      await frontFetchJson("/api/opportunities/bulk", {
+        method: "POST",
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+      await loadOpportunities(page, search, statusFilter);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur lors de la suppression.");
+    } finally {
+      setBulkLoading(false);
+    }
   };
 
   return (
@@ -70,6 +91,7 @@ export default function OpportunitiesPage() {
             Liste et création d&apos;opportunités.
           </p>
         </div>
+        <ExportButton href="/api/export/opportunities" label="Exporter CSV" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
@@ -105,6 +127,23 @@ export default function OpportunitiesPage() {
             </div>
           </div>
 
+          {/* Sélection + bulk actions */}
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                {selectedIds.size} sélectionné(s)
+              </span>
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                disabled={bulkLoading}
+                className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                Supprimer la sélection
+              </button>
+            </div>
+          )}
+
           {/* Résultats */}
           <div className="card">
             {loading ? (
@@ -119,7 +158,12 @@ export default function OpportunitiesPage() {
               </div>
             ) : (
               <>
-                <OpportunitiesTable data={opportunities} />
+                <OpportunitiesTable
+                  data={opportunities}
+                  selectable
+                  selectedIds={selectedIds}
+                  onSelectionChange={setSelectedIds}
+                />
                 <Pagination
                   page={page}
                   pageSize={PAGE_SIZE}

@@ -16,6 +16,8 @@ type OpportunityWithRelations = Prisma.WorkOpportunityGetPayload<{
   };
 }>;
 
+const ACTIVE = { deletedAt: null } as const;
+
 export async function getOpportunities(
   userId: string,
   options?: { page?: number; pageSize?: number; q?: string; status?: string }
@@ -24,6 +26,7 @@ export async function getOpportunities(
   const pageSize = options?.pageSize ?? 10;
   const where: Prisma.WorkOpportunityWhereInput = {
     userId,
+    ...ACTIVE,
     ...(options?.q ? { title: { contains: options.q, mode: "insensitive" } } : {}),
     ...(options?.status ? { status: options.status as WorkOpportunityStatus } : {}),
   };
@@ -40,21 +43,26 @@ export async function getOpportunities(
   return { items, page, pageSize, total };
 }
 
+export async function getAllOpportunitiesForExport(userId: string) {
+  return prisma.workOpportunity.findMany({
+    where: { userId, ...ACTIVE },
+    include: { company: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function createOpportunity(userId: string, data: OpportunityCreateInput) {
   const validatedData = opportunityCreateSchema.parse(data);
   if (validatedData.companyId) {
-    const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId } });
+    const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId, ...ACTIVE } });
     if (!company) throw NotFound("Company not found");
   }
-  const opp = await prisma.workOpportunity.create({
-    data: { ...validatedData, userId },
-  });
-  return opp;
+  return prisma.workOpportunity.create({ data: { ...validatedData, userId } });
 }
 
 export async function getOpportunity(id: string, userId: string): Promise<OpportunityWithRelations | null> {
   const opp = await prisma.workOpportunity.findFirst({
-    where: { id, userId },
+    where: { id, userId, ...ACTIVE },
     include: {
       company: true,
       entretiens: {
@@ -63,25 +71,27 @@ export async function getOpportunity(id: string, userId: string): Promise<Opport
       },
     },
   });
-  if (!opp) return null;
-  return opp;
+  return opp ?? null;
 }
 
 export async function updateOpportunity(id: string, userId: string, data: OpportunityUpdateInput) {
   const validatedData = opportunityUpdateSchema.parse(data);
   if (validatedData.companyId) {
-    const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId } });
+    const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId, ...ACTIVE } });
     if (!company) throw NotFound("Company not found");
   }
-  const updated = await prisma.workOpportunity.update({
-    where: { id, userId },
-    data: validatedData,
-  });
-  return updated;
+  return prisma.workOpportunity.update({ where: { id, userId }, data: validatedData });
 }
 
 export async function deleteOpportunity(id: string, userId: string) {
-  await prisma.workOpportunity.delete({ where: { id, userId } });
+  await prisma.workOpportunity.update({ where: { id, userId }, data: { deletedAt: new Date() } });
   return { success: true };
 }
 
+export async function deleteManyOpportunities(ids: string[], userId: string) {
+  await prisma.workOpportunity.updateMany({
+    where: { id: { in: ids }, userId, deletedAt: null },
+    data: { deletedAt: new Date() },
+  });
+  return { success: true };
+}
