@@ -5,6 +5,8 @@ import { pushToast } from "@/components/common/Toast";
 import { Modal } from "@/components/common/Modal";
 import { CompanyForm } from "@/components/companies/CompanyForm";
 import type { CompanyDTO } from "@/lib/dto/company";
+import companyService from "@/lib/services/front/company.service";
+import opportunityService from "@/lib/services/front/opportunity.service";
 
 type Props = {
   onSuccess?: () => void;
@@ -21,10 +23,8 @@ export function OpportunityForm({ onSuccess }: Props) {
   });
 
   const loadCompanies = async () => {
-    const res = await fetch("/api/companies");
-    if (!res.ok) return;
-    const data = await res.json();
-    setCompanies(data.items ?? []);
+    const items = await companyService.list();
+    setCompanies(items);
   };
 
   useEffect(() => {
@@ -35,17 +35,11 @@ export function OpportunityForm({ onSuccess }: Props) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/opportunities", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          title: form.title,
-          description: form.description || undefined,
-          companyId: form.companyId || undefined,
-        }),
+      await opportunityService.create({
+        title: form.title,
+        description: form.description || undefined,
+        companyId: form.companyId || undefined,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Opportunité créée" });
       setForm({ title: "", description: "", companyId: "" });
       onSuccess?.();
@@ -113,16 +107,10 @@ export function OpportunityForm({ onSuccess }: Props) {
       <Modal open={showCompanyModal} title="Créer une entreprise" onClose={() => setShowCompanyModal(false)}>
         <CompanyForm
           onSuccess={async () => {
-            const res = await fetch("/api/companies");
-            if (res.ok) {
-              const data = await res.json();
-              const newCompanies = data.items ?? [];
-              setCompanies(newCompanies);
-              // Sélectionner la dernière entreprise créée
-              if (newCompanies.length > 0) {
-                const lastCompany = newCompanies[0]; // Les entreprises sont triées par createdAt desc
-                setForm({ ...form, companyId: lastCompany.id });
-              }
+            const items = await companyService.list();
+            setCompanies(items);
+            if (items.length > 0) {
+              setForm((f) => ({ ...f, companyId: items[0].id }));
             }
             setShowCompanyModal(false);
           }}

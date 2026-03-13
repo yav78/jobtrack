@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { pushToast } from "@/components/common/Toast";
+import opportunityService from "@/lib/services/front/opportunity.service";
+import contactService from "@/lib/services/front/contact.service";
+import entretienService from "@/lib/services/front/entretien.service";
+import type { EntretienDTO } from "@/lib/dto/entretien";
 
 type Option = { id: string; label: string };
 
@@ -20,42 +24,48 @@ export function EntretienForm() {
 
   useEffect(() => {
     const load = async () => {
-      const [oppRes, contactRes] = await Promise.all([fetch("/api/opportunities"), fetch("/api/contacts")]);
-      if (oppRes.ok) {
-        const data = await oppRes.json();
-        setOpportunities((data.items ?? []).map((o: { id: string; title: string }) => ({ id: o.id, label: o.title })));
+      const [opps, ctacts] = await Promise.allSettled([
+        opportunityService.listAll(),
+        contactService.listAll(),
+      ]);
+      if (opps.status === "fulfilled") {
+        setOpportunities(opps.value.map((o) => ({ id: o.id, label: o.title })));
       }
-      if (contactRes.ok) {
-        const data = await contactRes.json();
-        setContacts(
-          (data.items ?? []).map((c: { id: string; firstName: string; lastName: string }) => ({
-            id: c.id,
-            label: `${c.firstName} ${c.lastName}`,
-          }))
-        );
+      if (ctacts.status === "fulfilled") {
+        setContacts(ctacts.value.map((c) => ({ id: c.id, label: `${c.firstName} ${c.lastName}` })));
       }
     };
     load();
   }, []);
 
+  const contactIdsKey = form.contactIds.join(",");
   useEffect(() => {
+    const ids = contactIdsKey.split(",").filter(Boolean);
     const loadChannels = async () => {
-      if (!form.contactIds.length) return setChannels([]);
-      const res = await fetch("/api/contacts");
-      if (!res.ok) return;
-      const data = await res.json();
-      const selected = (data.items ?? []).filter((c: { id: string }) => form.contactIds.includes(c.id));
-      const chans = selected.flatMap((c: { id: string; channels?: { id: string; value: string }[] }) =>
-        (c.channels ?? []).map((ch) => ({ id: ch.id, contactId: c.id, value: ch.value }))
-      );
-      setChannels(chans);
-      if (chans.length && !form.contactChannelId) {
-        setForm((f) => ({ ...f, contactChannelId: chans[0].id }));
+      if (!ids.length) {
+        setChannels([]);
+        setForm((f) => ({ ...f, contactChannelId: "" }));
+        return;
+      }
+      try {
+        const all = await contactService.listAll();
+        const selected = all.filter((c) => ids.includes(c.id));
+        const chans = selected.flatMap((c) =>
+          (c.channels ?? []).map((ch) => ({ id: ch.id, contactId: c.id, value: ch.value }))
+        );
+        setChannels(chans);
+        setForm((f) => ({
+          ...f,
+          contactChannelId: chans.some((ch) => ch.id === f.contactChannelId)
+            ? f.contactChannelId
+            : (chans[0]?.id ?? ""),
+        }));
+      } catch {
+        // ignore
       }
     };
     loadChannels();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.contactIds.join(",")]);
+  }, [contactIdsKey]);
 
   const filteredChannels = useMemo(() => {
     if (!form.contactIds.length) return [];
@@ -70,18 +80,12 @@ export function EntretienForm() {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/entretiens", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          date: form.date,
-          workOpportunityId: form.workOpportunityId,
-          contactChannelId: form.contactChannelId,
-          contactIds: form.contactIds,
-        }),
+      await entretienService.create<EntretienDTO>({
+        date: form.date,
+        workOpportunityId: form.workOpportunityId,
+        contactChannelId: form.contactChannelId,
+        contactIds: form.contactIds,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Entretien créé" });
       setForm({ date: "", workOpportunityId: "", contactIds: [], contactChannelId: "" });
     } catch (err) {

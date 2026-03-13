@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { pushToast } from "@/components/common/Toast";
+import opportunityActionService from "@/lib/services/front/opportunity-action.service";
 
 type Props = {
   actionId: string;
@@ -22,14 +23,7 @@ export function ActionDeleteButton({ actionId, opportunityId, onDeleted }: Props
 
     setLoading(true);
     try {
-      const url = opportunityId
-        ? `/api/opportunities/${opportunityId}/actions/${actionId}`
-        : `/api/actions/${actionId}`;
-      const res = await fetch(url, { method: "DELETE" });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Erreur lors de la suppression");
-      }
+      await opportunityActionService.deleteAction(actionId, opportunityId);
       pushToast({ type: "success", title: "Action supprimée" });
       onDeleted?.();
       router.refresh();
@@ -51,4 +45,3 @@ export function ActionDeleteButton({ actionId, opportunityId, onDeleted }: Props
     </button>
   );
 }
-

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { pushToast } from "@/components/common/Toast";
+import contactService from "@/lib/services/front/contact.service";
 
 type Props = {
   contactId: string;
@@ -21,16 +22,10 @@ export function ChannelForm({ contactId, onSuccess }: Props) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`/api/contacts/${contactId}/channels`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          label: form.label || undefined,
-        }),
+      await contactService.createChannel(contactId, {
+        ...form,
+        label: form.label || undefined,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Canal ajouté" });
       setForm({ channelTypeCode: "EMAIL", value: "", label: "", isPrimary: false });
       onSuccess?.();

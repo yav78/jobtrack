@@ -6,6 +6,8 @@ import { Modal } from "@/components/common/Modal";
 import { CompanyForm } from "@/components/companies/CompanyForm";
 import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
 import type { CompanyDTO } from "@/lib/dto/company";
+import companyService from "@/lib/services/front/company.service";
+import opportunityService from "@/lib/services/front/opportunity.service";
 
 type Props = {
   opportunity: WorkOpportunityDTO;
@@ -33,10 +35,8 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
   }, [opportunity]);
 
   const loadCompanies = async () => {
-    const res = await fetch("/api/companies");
-    if (!res.ok) return;
-    const data = await res.json();
-    setCompanies(data.items ?? []);
+    const items = await companyService.list();
+    setCompanies(items);
   };
 
   useEffect(() => {
@@ -47,17 +47,11 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`/api/opportunities/${opportunity.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          title: form.title,
-          description: form.description || undefined,
-          companyId: form.companyId || undefined,
-        }),
+      const data = await opportunityService.update<WorkOpportunityDTO>(opportunity.id, {
+        title: form.title,
+        description: form.description || undefined,
+        companyId: form.companyId || undefined,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Opportunité mise à jour" });
       onSuccess?.(data);
     } catch (err) {

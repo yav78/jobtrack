@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { pushToast } from "@/components/common/Toast";
 import { ContactDTO } from "@/lib/dto/contact";
+import contactService from "@/lib/services/front/contact.service";
+import companyService from "@/lib/services/front/company.service";
 
 type CompanyOption = { id: string; name: string };
 
@@ -23,17 +25,13 @@ export function ContactForm({ onSuccess }: Props) {
 
   useEffect(() => {
     const load = async () => {
-      const res = await fetch("/api/companies");
-      if (!res.ok) return;
-      const data = await res.json();
-      setCompanies(data.items ?? []);
-      if (data.items?.length && !form.companyId) {
-        setForm((f) => ({ ...f, companyId: data.items[0].id }));
+      const items = await companyService.list();
+      setCompanies(items);
+      if (items.length) {
+        setForm((f) => ({ ...f, companyId: f.companyId || items[0].id }));
       }
     };
     load();
-    // form.companyId intentionally excluded to avoid reset loop after first set
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const submit = async (e: React.FormEvent) => {
@@ -44,17 +42,11 @@ export function ContactForm({ onSuccess }: Props) {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/contacts", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          roleTitle: form.roleTitle || undefined,
-          notes: form.notes || undefined,
-        }),
+      const data = await contactService.create<ContactDTO>({
+        ...form,
+        roleTitle: form.roleTitle || undefined,
+        notes: form.notes || undefined,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Contact créé" });
       onSuccess?.(data);
       setForm((f) => ({ ...f, firstName: "", lastName: "", roleTitle: "", notes: "" }));

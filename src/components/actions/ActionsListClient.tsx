@@ -6,6 +6,7 @@ import { ACTION_TYPE_COLORS, ACTION_TYPE_LABELS } from "@/constants/opportunityA
 import type { OpportunityActionDTO } from "@/lib/dto/opportunity-action";
 import type { OpportunityActionType } from "@prisma/client";
 import { ActionDeleteButton } from "@/components/opportunities/ActionDeleteButton";
+import opportunityActionService from "@/lib/services/front/opportunity-action.service";
 
 export type ActionsListClientHandle = {
   addAction: (action: OpportunityActionDTO) => void;
@@ -54,13 +55,11 @@ export const ActionsListClient = forwardRef<ActionsListClientHandle, Props>(func
   const loadActions = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (typeFilter) params.set("type", typeFilter);
-      if (contactId) params.set("contactId", contactId);
-      const res = await fetch(`/api/actions?${params.toString()}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setActions(data.items ?? []);
+      const items = await opportunityActionService.listAll({
+        type: typeFilter || undefined,
+        contactId: contactId || undefined,
+      });
+      setActions(items);
     } catch {
       setActions([]);
     } finally {

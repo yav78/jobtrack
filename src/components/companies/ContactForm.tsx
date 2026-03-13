@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { pushToast } from "@/components/common/Toast";
 import type { ContactDTO } from "@/lib/dto/contact";
+import contactService from "@/lib/services/front/contact.service";
 
 type Props = {
   companyId: string;
@@ -22,18 +23,12 @@ export function ContactForm({ companyId, onSuccess }: Props) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/contacts", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          companyId,
-          ...form,
-          roleTitle: form.roleTitle || undefined,
-          notes: form.notes || undefined,
-        }),
+      const data = await contactService.create<ContactDTO>({
+        companyId,
+        ...form,
+        roleTitle: form.roleTitle || undefined,
+        notes: form.notes || undefined,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Contact créé" });
       onSuccess?.(data);
       setForm({

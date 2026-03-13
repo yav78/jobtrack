@@ -7,6 +7,9 @@ import { pushToast } from "@/components/common/Toast";
 import type { OpportunityActionType } from "@prisma/client";
 import type { ContactDTO } from "@/lib/dto/contact";
 import type { ChannelTypeDTO } from "@/lib/dto/channel";
+import contactService from "@/lib/services/front/contact.service";
+import channelTypeService from "@/lib/services/front/channel-type.service";
+import opportunityActionService from "@/lib/services/front/opportunity-action.service";
 
 const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
   { value: "INTERVIEW", label: "Entretien" },
@@ -32,22 +35,15 @@ type Props = {
 async function fetchContacts(companyId?: string | null): Promise<ContactDTO[]> {
   if (!companyId) return [];
   try {
-    const res = await fetch(`/api/contacts?companyId=${companyId}`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.items ?? [];
+    return await contactService.listByCompany(companyId);
   } catch {
     return [];
   }
 }
 
-
 async function fetchChannelTypes(): Promise<ChannelTypeDTO[]> {
   try {
-    const res = await fetch(`/api/channel-types`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.items ?? [];
+    return await channelTypeService.list();
   } catch {
     return [];
   }
@@ -90,19 +86,13 @@ export function ActionForm({ opportunityId, open, onClose, companyId }: Props) {
     }
     setLoading(true);
     try {
-      const res = await fetch(`/api/opportunities/${opportunityId}/actions`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          type: form.type,
-          occurredAt: new Date(form.occurredAt).toISOString(),
-          notes: form.notes || undefined,
-          channelTypeCode: form.channelTypeCode || undefined,
-          participantContactIds: form.participantContactIds.length > 0 ? form.participantContactIds : undefined,
-        }),
+      await opportunityActionService.createForOpportunity(opportunityId, {
+        type: form.type,
+        occurredAt: new Date(form.occurredAt).toISOString(),
+        notes: form.notes || undefined,
+        channelTypeCode: form.channelTypeCode || undefined,
+        participantContactIds: form.participantContactIds.length > 0 ? form.participantContactIds : undefined,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Action créée" });
       setForm({
         type: "INTERVIEW",

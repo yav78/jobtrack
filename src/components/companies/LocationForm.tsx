@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { pushToast } from "@/components/common/Toast";
+import companyService from "@/lib/services/front/company.service";
+
+import type { LocationDTO } from "@/lib/dto/company";
 
 type Props = {
   companyId: string;
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: LocationDTO) => void;
 };
 
 export function LocationForm({ companyId, onSuccess }: Props) {
@@ -24,17 +27,10 @@ export function LocationForm({ companyId, onSuccess }: Props) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`/api/companies/${companyId}/locations`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          addressLine2: form.addressLine2 || undefined,
-        }),
+      const data = await companyService.createLocation(companyId, {
+        ...form,
+        addressLine2: form.addressLine2 || undefined,
       });
-      const data = await res.json();
-      console.log("data", data);
-      if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Lieu créé" });
       onSuccess?.(data);
       

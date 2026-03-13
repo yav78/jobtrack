@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { pushToast } from "@/components/common/Toast";
 import type { LocationDTO } from "@/lib/dto/company";
+import companyService from "@/lib/services/front/company.service";
 
 type Props = {
   location: LocationDTO;
@@ -39,16 +40,10 @@ export function LocationEditForm({ location, onSuccess, onCancel }: Props) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`/api/locations/${location.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          addressLine2: form.addressLine2 || undefined,
-        }),
+      const data = await companyService.updateLocation(location.id, {
+        ...form,
+        addressLine2: form.addressLine2 || undefined,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Lieu mis à jour" });
       onSuccess?.(data);
     } catch (err) {

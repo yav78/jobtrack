@@ -23,7 +23,7 @@ export function CompanyForm({ onSuccess }: Props) {
     e.preventDefault();
     setLoading(true);
     try {
-      const data = await companyService.create({
+      const data = await companyService.create<{ id: string; name: string }>({
         ...form,
         website: form.website || undefined,
         notes: form.notes || undefined,

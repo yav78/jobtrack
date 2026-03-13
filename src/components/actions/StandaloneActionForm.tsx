@@ -8,6 +8,10 @@ import type { OpportunityActionType } from "@prisma/client";
 import type { ContactDTO } from "@/lib/dto/contact";
 import type { ChannelTypeDTO } from "@/lib/dto/channel";
 import type { OpportunityActionDTO } from "@/lib/dto/opportunity-action";
+import companyService from "@/lib/services/front/company.service";
+import contactService from "@/lib/services/front/contact.service";
+import channelTypeService from "@/lib/services/front/channel-type.service";
+import opportunityActionService from "@/lib/services/front/opportunity-action.service";
 
 const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
   { value: "INTERVIEW", label: "Entretien" },
@@ -41,22 +45,15 @@ type Props = {
 
 async function fetchCompanies(): Promise<CompanyOption[]> {
   try {
-    const res = await fetch("/api/companies");
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.items ?? [];
+    return await companyService.list();
   } catch {
     return [];
   }
 }
 
-/** Tous les contacts (pour "action entre User et Contact") */
 async function fetchAllContacts(): Promise<ContactDTO[]> {
   try {
-    const res = await fetch("/api/contacts?pageSize=300");
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.items ?? [];
+    return await contactService.listAll(300);
   } catch {
     return [];
   }
@@ -64,10 +61,7 @@ async function fetchAllContacts(): Promise<ContactDTO[]> {
 
 async function fetchContactsByCompany(companyId: string): Promise<ContactDTO[]> {
   try {
-    const res = await fetch(`/api/contacts?companyId=${companyId}`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.items ?? [];
+    return await contactService.listByCompany(companyId);
   } catch {
     return [];
   }
@@ -75,10 +69,7 @@ async function fetchContactsByCompany(companyId: string): Promise<ContactDTO[]> 
 
 async function fetchChannelTypes(): Promise<ChannelTypeDTO[]> {
   try {
-    const res = await fetch("/api/channel-types");
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.items ?? [];
+    return await channelTypeService.list();
   } catch {
     return [];
   }
@@ -170,15 +161,10 @@ export function StandaloneActionForm({
         participantContactIds:
           form.participantContactIds.length > 0 ? form.participantContactIds : undefined,
       };
-      const url = isEdit && editActionId ? `/api/actions/${editActionId}` : "/api/actions";
-      const method = isEdit ? "PATCH" : "POST";
-      const res = await fetch(url, {
-        method,
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
+      const data =
+        isEdit && editActionId
+          ? await opportunityActionService.updateStandalone(editActionId, payload)
+          : await opportunityActionService.createStandalone(payload);
       pushToast({ type: "success", title: isEdit ? "Action modifiée" : "Action créée" });
       onSuccess?.(data);
       setForm({

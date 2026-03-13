@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { pushToast } from "@/components/common/Toast";
 import type { CompanyDTO } from "@/lib/dto/company";
 import { useCompanyTypes } from "@/hooks/useCompanyTypes";
+import companyService from "@/lib/services/front/company.service";
 
 type Props = {
   company: CompanyDTO;
@@ -34,18 +35,12 @@ export function CompanyEditForm({ company, onSuccess }: Props) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`/api/companies/${company.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          typeCode: form.typeCode,
-          website: form.website || undefined,
-          notes: form.notes || undefined,
-        }),
+      const data = await companyService.update<CompanyDTO>(company.id, {
+        name: form.name,
+        typeCode: form.typeCode,
+        website: form.website || undefined,
+        notes: form.notes || undefined,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Entreprise mise à jour" });
       onSuccess?.(data);
     } catch (err) {

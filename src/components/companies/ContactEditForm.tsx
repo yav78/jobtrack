@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { pushToast } from "@/components/common/Toast";
 import type { ContactDTO } from "@/lib/dto/contact";
+import contactService from "@/lib/services/front/contact.service";
 
 type Props = {
   contact: ContactDTO;
@@ -33,18 +34,12 @@ export function ContactEditForm({ contact, onSuccess, onCancel }: Props) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`/api/contacts/${contact.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          firstName: form.firstName,
-          lastName: form.lastName,
-          roleTitle: form.roleTitle || undefined,
-          notes: form.notes || undefined,
-        }),
+      const data = await contactService.update<ContactDTO>(contact.id, {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        roleTitle: form.roleTitle || undefined,
+        notes: form.notes || undefined,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
       pushToast({ type: "success", title: "Contact mis à jour" });
       onSuccess?.(data);
     } catch (err) {
