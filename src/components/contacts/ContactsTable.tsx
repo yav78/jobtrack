@@ -22,7 +22,7 @@ export function ContactsTable({ data }: Props) {
   return (
     <DataTable
       data={data}
-      empty="Aucun contact"
+      empty="Aucun contact. Utilisez le formulaire à droite pour en créer un."
       columns={[
         {
           header: "Nom",

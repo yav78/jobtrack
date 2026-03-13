@@ -12,7 +12,7 @@ export function OpportunitiesTable({ data }: Props) {
   return (
     <DataTable
       data={data}
-      empty="Aucune opportunité"
+      empty="Aucune opportunité. Utilisez le formulaire à droite pour en créer une."
       columns={[
         { header: "Titre", render: (row) => <Link href={`/opportunities/${row.id}`}>{row.title}</Link> },
         {

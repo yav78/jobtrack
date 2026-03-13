@@ -51,7 +51,9 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
               </li>
             ))
           ) : (
-            <div className="text-neutral-500">Aucun canal</div>
+            <div className="text-sm text-neutral-500">
+              Aucun canal de contact. Ajoutez-en un ci-dessous.
+            </div>
           )}
         </ul>
         <div className="mt-3">
