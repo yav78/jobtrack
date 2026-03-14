@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ChannelForm } from "@/components/contacts/ChannelForm";
+import { AddChannelButton } from "@/components/contacts/AddChannelButton";
 import { ContactActionsSection } from "@/components/contacts/ContactActionsSection";
 import { SendEmailModal } from "@/components/common/SendEmailModal";
 import { getContact } from "@/lib/services/back/contacts";
@@ -50,7 +50,10 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
       <ContactActionsSection contactId={contact.id} companyId={contact.companyId} />
 
       <div className="card space-y-3">
-        <h3 className="text-sm font-semibold">Canaux</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Canaux</h3>
+          <AddChannelButton contactId={contact.id} />
+        </div>
         <ul className="space-y-2 text-sm">
           {contact.channels?.length ? (
             contact.channels.map((ch) => (
@@ -65,14 +68,10 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             ))
           ) : (
             <div className="text-sm text-neutral-500">
-              Aucun canal de contact. Ajoutez-en un ci-dessous.
+              Aucun canal de contact.
             </div>
           )}
         </ul>
-        <div className="mt-3">
-          <h4 className="text-sm font-semibold">Ajouter un canal</h4>
-          <ChannelForm contactId={contact.id} />
-        </div>
       </div>
       {contact.notes && (
         <div className="card">
