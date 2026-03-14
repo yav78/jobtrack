@@ -83,5 +83,5 @@ Légende : `[ ]` à faire · `[x]` fait · `[~]` en cours
 
 ### Long terme
 - [ ] **Intégration email** — relance directement depuis une opportunité/contact
-- [ ] **Chronologie globale** — toutes les actions récentes de l'utilisateur
-- [ ] **Documentation API** — OpenAPI/Swagger auto-générée
+- [x] **Chronologie globale** — page `/actions` avec groupement par date, filtre par type, liens vers opportunité/contact/entreprise
+- [x] **Documentation API** — spec OpenAPI 3.0 sur `/api/openapi` + Swagger UI sur `/docs`
