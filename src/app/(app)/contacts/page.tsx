@@ -3,12 +3,13 @@ import { ContactForm } from "@/components/contacts/ContactForm";
 import { ContactsTable } from "@/components/contacts/ContactsTable";
 import { Pagination } from "@/components/common/Pagination";
 import { ExportButton } from "@/components/common/ExportButton";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { Modal } from "@/components/common/Modal";
 import { ContactDTO } from "@/lib/dto/contact";
 
 import contactService from "@/lib/services/front/contact.service";
 import { useEffect, useState } from "react";
 import { frontFetchJson } from "@/lib/services/front/abstract-crus.service";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 const PAGE_SIZE = 20;
 
@@ -17,10 +18,7 @@ type ContactRow = {
   firstName: string;
   lastName: string;
   companyId: string;
-  company?: {
-    id: string;
-    name: string;
-  };
+  company?: { id: string; name: string };
 };
 
 function convertToContactRow(contacts: ContactDTO[]): ContactRow[] {
@@ -42,6 +40,7 @@ export default function ContactsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const load = async (p: number) => {
     try {
@@ -84,57 +83,68 @@ export default function ContactsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Contacts</h1>
-          <p className="text-sm text-neutral-600 dark:text-neutral-300">Liste des contacts et création rapide.</p>
+          <p className="text-sm text-neutral-600 dark:text-neutral-300">Liste des contacts.</p>
         </div>
-        <ExportButton href="/api/export/contacts" label="Exporter CSV" />
+        <div className="flex items-center gap-2">
+          <ExportButton href="/api/export/contacts" label="Exporter CSV" />
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="rounded bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+          >
+            Nouveau contact
+          </button>
+        </div>
       </div>
-      <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-        <div className="card space-y-3">
-          {selectedIds.size > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                {selectedIds.size} sélectionné(s)
-              </span>
-              <button
-                type="button"
-                onClick={() => setConfirmOpen(true)}
-                disabled={bulkLoading}
-                className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                Supprimer la sélection
-              </button>
-            </div>
-          )}
-          {loading ? (
-            <div className="space-y-2 animate-pulse">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-10 rounded bg-neutral-200 dark:bg-neutral-700" />
-              ))}
-            </div>
-          ) : error ? (
-            <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
-              {error}
-            </div>
-          ) : (
-            <>
-              <ContactsTable
-                data={contacts}
-                selectable
-                selectedIds={selectedIds}
-                onSelectionChange={setSelectedIds}
-              />
-              <Pagination page={page} pageSize={PAGE_SIZE} total={total} onPageChange={load} />
-            </>
-          )}
-        </div>
-        <div className="card">
-          <h2 className="text-lg font-semibold">Créer un contact</h2>
-          <ContactForm onSuccess={(contact) => {
+
+      <div className="card space-y-3">
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-neutral-600 dark:text-neutral-400">
+              {selectedIds.size} sélectionné(s)
+            </span>
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(true)}
+              disabled={bulkLoading}
+              className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              Supprimer la sélection
+            </button>
+          </div>
+        )}
+        {loading ? (
+          <div className="space-y-2 animate-pulse">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-10 rounded bg-neutral-200 dark:bg-neutral-700" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+            {error}
+          </div>
+        ) : (
+          <>
+            <ContactsTable
+              data={contacts}
+              selectable
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+            />
+            <Pagination page={page} pageSize={PAGE_SIZE} total={total} onPageChange={load} />
+          </>
+        )}
+      </div>
+
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Créer un contact">
+        <ContactForm
+          onSuccess={(contact) => {
             setContacts((prev) => [contact, ...prev]);
             setTotal((t) => t + 1);
-          }} />
-        </div>
-      </div>
+            setCreateOpen(false);
+          }}
+        />
+      </Modal>
 
       <ConfirmDialog
         open={confirmOpen}
