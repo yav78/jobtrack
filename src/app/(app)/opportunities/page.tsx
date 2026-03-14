@@ -9,6 +9,7 @@ import { ExportButton } from "@/components/common/ExportButton";
 import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
 import opportunityService from "@/lib/services/front/opportunity.service";
 import { frontFetchJson } from "@/lib/services/front/abstract-crus.service";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import {
   OPPORTUNITY_STATUS_LABELS,
   OPPORTUNITY_STATUS_COLORS,
@@ -32,6 +33,7 @@ export default function OpportunitiesPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const loadOpportunities = useCallback(
     async (p: number, q: string, status: string) => {
@@ -66,8 +68,7 @@ export default function OpportunitiesPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) return;
-    if (!confirm(`Supprimer ${selectedIds.size} opportunité(s) ?`)) return;
+    setConfirmOpen(false);
     try {
       setBulkLoading(true);
       await frontFetchJson("/api/opportunities/bulk", {
@@ -135,7 +136,7 @@ export default function OpportunitiesPage() {
               </span>
               <button
                 type="button"
-                onClick={handleBulkDelete}
+                onClick={() => setConfirmOpen(true)}
                 disabled={bulkLoading}
                 className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700 disabled:opacity-50"
               >
@@ -180,6 +181,15 @@ export default function OpportunitiesPage() {
           <OpportunityForm onSuccess={handleSuccess} />
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title={`Supprimer ${selectedIds.size} opportunité(s) ?`}
+        description="Cette action est réversible depuis la corbeille."
+        confirmLabel="Supprimer"
+        onConfirm={handleBulkDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { ContactDTO } from "@/lib/dto/contact";
 import contactService from "@/lib/services/front/contact.service";
 import { useEffect, useState } from "react";
 import { frontFetchJson } from "@/lib/services/front/abstract-crus.service";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 const PAGE_SIZE = 20;
 
@@ -40,6 +41,7 @@ export default function ContactsPage() {
   const [total, setTotal] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const load = async (p: number) => {
     try {
@@ -62,8 +64,7 @@ export default function ContactsPage() {
   }, []);
 
   const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) return;
-    if (!confirm(`Supprimer ${selectedIds.size} contact(s) ?`)) return;
+    setConfirmOpen(false);
     try {
       setBulkLoading(true);
       await frontFetchJson("/api/contacts/bulk", {
@@ -96,7 +97,7 @@ export default function ContactsPage() {
               </span>
               <button
                 type="button"
-                onClick={handleBulkDelete}
+                onClick={() => setConfirmOpen(true)}
                 disabled={bulkLoading}
                 className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700 disabled:opacity-50"
               >
@@ -134,6 +135,15 @@ export default function ContactsPage() {
           }} />
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title={`Supprimer ${selectedIds.size} contact(s) ?`}
+        description="Cette action est réversible depuis la corbeille."
+        confirmLabel="Supprimer"
+        onConfirm={handleBulkDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

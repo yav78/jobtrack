@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { pushToast } from "@/components/common/Toast";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import opportunityActionService from "@/lib/services/front/opportunity-action.service";
 
 type Props = {
@@ -15,12 +16,10 @@ type Props = {
 export function ActionDeleteButton({ actionId, opportunityId, onDeleted }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
-  const handleDelete = async () => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cette action ?")) {
-      return;
-    }
-
+  const handleConfirm = async () => {
+    setConfirming(false);
     setLoading(true);
     try {
       await opportunityActionService.deleteAction(actionId, opportunityId);
@@ -36,12 +35,24 @@ export function ActionDeleteButton({ actionId, opportunityId, onDeleted }: Props
   };
 
   return (
-    <button
-      onClick={handleDelete}
-      disabled={loading}
-      className="text-xs text-red-600 hover:underline dark:text-red-400 disabled:opacity-50"
-    >
-      {loading ? "Suppression..." : "Supprimer"}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        disabled={loading}
+        className="text-xs text-red-600 hover:underline dark:text-red-400 disabled:opacity-50"
+      >
+        {loading ? "Suppression..." : "Supprimer"}
+      </button>
+
+      <ConfirmDialog
+        open={confirming}
+        title="Supprimer cette action ?"
+        description="Cette action sera définitivement supprimée."
+        confirmLabel="Supprimer"
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirming(false)}
+      />
+    </>
   );
 }

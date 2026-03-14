@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { frontFetchJson } from "@/lib/services/front/abstract-crus.service";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 type TrashedCompany = { id: string; name: string; deletedAt: string };
 type TrashedContact = {
@@ -33,6 +34,7 @@ export default function TrashPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ entity: string; id: string; label: string } | null>(null);
 
   const load = async () => {
     try {
@@ -64,9 +66,9 @@ export default function TrashPage() {
     }
   };
 
-  const permanentDelete = async (entity: string, id: string, label: string) => {
-    if (!confirm(`Supprimer définitivement "${label}" ? Cette action est irréversible.`)) return;
+  const permanentDelete = async (entity: string, id: string) => {
     const key = `${entity}:${id}`;
+    setPendingDelete(null);
     try {
       setActionLoading(key);
       await frontFetchJson(`/api/trash/${entity}/${id}`, { method: "DELETE" });
@@ -129,7 +131,7 @@ export default function TrashPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => permanentDelete("companies", c.id, c.name)}
+                          onClick={() => setPendingDelete({ entity: "companies", id: c.id, label: c.name })}
                           disabled={actionLoading === key}
                           className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:hover:bg-red-950"
                         >
@@ -172,7 +174,7 @@ export default function TrashPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => permanentDelete("contacts", c.id, `${c.firstName} ${c.lastName}`)}
+                          onClick={() => setPendingDelete({ entity: "contacts", id: c.id, label: `${c.firstName} ${c.lastName}` })}
                           disabled={actionLoading === key}
                           className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:hover:bg-red-950"
                         >
@@ -213,7 +215,7 @@ export default function TrashPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => permanentDelete("opportunities", o.id, o.title)}
+                          onClick={() => setPendingDelete({ entity: "opportunities", id: o.id, label: o.title })}
                           disabled={actionLoading === key}
                           className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:hover:bg-red-950"
                         >
@@ -228,6 +230,15 @@ export default function TrashPage() {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Suppression définitive"
+        description={`Supprimer définitivement « ${pendingDelete?.label} » ? Cette action est irréversible.`}
+        confirmLabel="Supprimer définitivement"
+        onConfirm={() => pendingDelete && permanentDelete(pendingDelete.entity, pendingDelete.id)}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

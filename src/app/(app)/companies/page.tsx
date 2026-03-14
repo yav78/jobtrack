@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CompanyForm } from "@/components/companies/CompanyForm";
 import { CompaniesTable } from "@/components/companies/CompaniesTable";
 import { ExportButton } from "@/components/common/ExportButton";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import type { CompanyDTO } from "@/lib/dto/company";
 import companyService from "@/lib/services/front/company.service";
 import { frontFetchJson } from "@/lib/services/front/abstract-crus.service";
@@ -14,6 +15,7 @@ export default function CompaniesPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const load = async () => {
     try {
@@ -34,8 +36,7 @@ export default function CompaniesPage() {
   }, []);
 
   const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) return;
-    if (!confirm(`Supprimer ${selectedIds.size} entreprise(s) et leurs contacts ?`)) return;
+    setConfirmOpen(false);
     try {
       setBulkLoading(true);
       await frontFetchJson("/api/companies/bulk", {
@@ -68,7 +69,7 @@ export default function CompaniesPage() {
               </span>
               <button
                 type="button"
-                onClick={handleBulkDelete}
+                onClick={() => setConfirmOpen(true)}
                 disabled={bulkLoading}
                 className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700 disabled:opacity-50"
               >
@@ -100,6 +101,15 @@ export default function CompaniesPage() {
           <CompanyForm onSuccess={() => load()} />
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title={`Supprimer ${selectedIds.size} entreprise(s) ?`}
+        description="Les contacts associés seront également supprimés. Cette action est réversible depuis la corbeille."
+        confirmLabel="Supprimer"
+        onConfirm={handleBulkDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }
