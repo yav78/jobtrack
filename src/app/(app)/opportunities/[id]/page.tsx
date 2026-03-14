@@ -3,6 +3,7 @@ import { OpportunityTimeline } from "@/components/opportunities/OpportunityTimel
 import { ActionPageClient } from "@/components/opportunities/ActionPageClient";
 import { ActionTypeFilterClient } from "@/components/opportunities/ActionTypeFilterClient";
 import { OpportunityEditClient } from "@/components/opportunities/OpportunityEditClient";
+import { OpportunityEmailButton } from "@/components/opportunities/OpportunityEmailButton";
 import { getOpportunity } from "@/lib/services/back/opportunities";
 import { requireUserId } from "@/lib/api-helpers";
 
@@ -58,6 +59,13 @@ export default async function OpportunityDetailPage({
   return (
     <div className="space-y-4">
       <OpportunityEditClient opportunity={opportunityDTO} />
+
+      <div className="flex justify-end">
+        <OpportunityEmailButton
+          opportunityTitle={opp.title}
+          companyName={opp.company?.name}
+        />
+      </div>
 
       <div className="card space-y-4">
         <div className="flex items-center justify-between">

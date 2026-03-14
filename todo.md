@@ -64,7 +64,7 @@ Légende : `[ ]` à faire · `[x]` fait · `[~]` en cours
 
 - [x] **`force-dynamic`** sur la page dashboard — justifié : données utilisateur au moment de la requête
 
-- [ ] **Pas de rate limiting** sur les endpoints (login, création de compte) — à traiter au niveau infrastructure (Vercel Edge / middleware), pas en application
+- [x] **Pas de rate limiting** sur les endpoints (login, création de compte) — implémenté dans `src/middleware.ts` (Edge, in-memory) : 10 req/min sur `/api/auth/callback/credentials`, 20 req/min sur `/login` et `/register`
 
 ---
 
@@ -82,6 +82,6 @@ Légende : `[ ]` à faire · `[x]` fait · `[~]` en cours
 - [x] **Actions en masse** — sélection multiple pour supprimer (DataTable selectable, `/api/*/bulk`, pages entreprises/contacts/opportunités)
 
 ### Long terme
-- [ ] **Intégration email** — relance directement depuis une opportunité/contact
+- [x] **Intégration email** — relance depuis opportunité et contact via `SendEmailModal` ; transport SMTP nodemailer configurable via `SMTP_HOST/PORT/USER/PASS/FROM` ; route `/api/email/send`
 - [x] **Chronologie globale** — page `/actions` avec groupement par date, filtre par type, liens vers opportunité/contact/entreprise
 - [x] **Documentation API** — spec OpenAPI 3.0 sur `/api/openapi` + Swagger UI sur `/docs`

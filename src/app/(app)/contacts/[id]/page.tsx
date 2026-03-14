@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ChannelForm } from "@/components/contacts/ChannelForm";
 import { ContactActionsSection } from "@/components/contacts/ContactActionsSection";
+import { SendEmailModal } from "@/components/common/SendEmailModal";
 import { getContact } from "@/lib/services/back/contacts";
 import { requireUserId } from "@/lib/api-helpers";
 
@@ -25,13 +26,25 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
   const contact = await getContact(id, userId);
   if (!contact) return notFound();
 
+  const emailChannel = contact.channels?.find(
+    (ch) => ch.channelTypeCode === "EMAIL" || ch.value.includes("@")
+  );
+
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {contact.firstName} {contact.lastName}
-        </h1>
-        {contact.roleTitle && <p className="text-sm text-neutral-600 dark:text-neutral-300">{contact.roleTitle}</p>}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">
+            {contact.firstName} {contact.lastName}
+          </h1>
+          {contact.roleTitle && <p className="text-sm text-neutral-600 dark:text-neutral-300">{contact.roleTitle}</p>}
+        </div>
+        <SendEmailModal
+          defaultTo={emailChannel?.value ?? ""}
+          defaultSubject={`Relance — ${contact.firstName} ${contact.lastName}`}
+          defaultText={`Bonjour ${contact.firstName},\n\nJe me permets de vous recontacter suite à nos échanges.\n\nCordialement,`}
+          triggerLabel="Envoyer un email"
+        />
       </div>
 
       <ContactActionsSection contactId={contact.id} companyId={contact.companyId} />
