@@ -38,6 +38,7 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
   const [form, setForm] = useState({
     title: opportunity.title,
     description: opportunity.description || "",
+    sourceUrl: opportunity.sourceUrl || "",
     companyId: opportunity.companyId || "",
     status: opportunity.status || "SOURCING",
     followUpAt: toDatetimeLocal(opportunity.followUpAt),
@@ -47,6 +48,7 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
     setForm({
       title: opportunity.title,
       description: opportunity.description || "",
+      sourceUrl: opportunity.sourceUrl || "",
       companyId: opportunity.companyId || "",
       status: opportunity.status || "SOURCING",
       followUpAt: toDatetimeLocal(opportunity.followUpAt),
@@ -69,6 +71,7 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
       const data = await opportunityService.update<WorkOpportunityDTO>(opportunity.id, {
         title: form.title,
         description: form.description || undefined,
+        sourceUrl: form.sourceUrl || undefined,
         companyId: form.companyId || undefined,
         status: form.status,
         followUpAt: form.followUpAt ? new Date(form.followUpAt).toISOString() : null,
@@ -93,6 +96,19 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             required
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">
+            Source URL <span className="text-neutral-400 font-normal">(optionnel)</span>
+          </label>
+          <input
+            type="url"
+            placeholder="https://..."
+            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            value={form.sourceUrl}
+            onChange={(e) => setForm({ ...form, sourceUrl: e.target.value })}
           />
         </div>
 
