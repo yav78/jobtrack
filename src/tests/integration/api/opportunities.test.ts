@@ -48,5 +48,51 @@ describe("API opportunities", () => {
     const list = await resList.json();
     expect(list.items.some((o: { title: string }) => o.title === "Op A")).toBe(true);
   });
-});
 
+  describe("sourceUrl", () => {
+    it("creates opportunity with a valid sourceUrl", async () => {
+      const res = await postOpportunity(
+        makeRequest("http://localhost/api/opportunities", "POST", {
+          title: "Op with URL",
+          sourceUrl: "https://example.com/job/42",
+        })
+      );
+      expect(res.status).toBe(201);
+      const opp = await res.json();
+      expect(opp.sourceUrl).toBe("https://example.com/job/42");
+    });
+
+    it("creates opportunity with sourceUrl null", async () => {
+      const res = await postOpportunity(
+        makeRequest("http://localhost/api/opportunities", "POST", {
+          title: "Op null URL",
+          sourceUrl: null,
+        })
+      );
+      expect(res.status).toBe(201);
+      const opp = await res.json();
+      expect(opp.sourceUrl).toBeNull();
+    });
+
+    it("creates opportunity without sourceUrl (omitted)", async () => {
+      const res = await postOpportunity(
+        makeRequest("http://localhost/api/opportunities", "POST", {
+          title: "Op no URL",
+        })
+      );
+      expect(res.status).toBe(201);
+      const opp = await res.json();
+      expect(opp.sourceUrl == null).toBe(true);
+    });
+
+    it("rejects opportunity with invalid sourceUrl", async () => {
+      const res = await postOpportunity(
+        makeRequest("http://localhost/api/opportunities", "POST", {
+          title: "Op bad URL",
+          sourceUrl: "not-a-valid-url",
+        })
+      );
+      expect(res.status).toBe(400);
+    });
+  });
+});
