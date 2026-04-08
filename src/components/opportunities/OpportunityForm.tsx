@@ -19,6 +19,7 @@ export function OpportunityForm({ onSuccess }: Props) {
   const [form, setForm] = useState({
     title: "",
     description: "",
+    sourceUrl: "",
     companyId: "",
   });
 
@@ -38,10 +39,11 @@ export function OpportunityForm({ onSuccess }: Props) {
       await opportunityService.create({
         title: form.title,
         description: form.description || undefined,
+        sourceUrl: form.sourceUrl || undefined,
         companyId: form.companyId || undefined,
       });
       pushToast({ type: "success", title: "Opportunité créée" });
-      setForm({ title: "", description: "", companyId: "" });
+      setForm({ title: "", description: "", sourceUrl: "", companyId: "" });
       onSuccess?.();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -85,6 +87,16 @@ export function OpportunityForm({ onSuccess }: Props) {
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           required
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-sm font-medium">Source URL <span className="text-neutral-400 font-normal">(optionnel)</span></label>
+        <input
+          type="url"
+          placeholder="https://..."
+          className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+          value={form.sourceUrl}
+          onChange={(e) => setForm({ ...form, sourceUrl: e.target.value })}
         />
       </div>
       <div className="space-y-1">
