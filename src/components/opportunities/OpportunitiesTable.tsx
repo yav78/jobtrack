@@ -72,7 +72,8 @@ export function OpportunitiesTable({ data, selectable, selectedIds, onSelectionC
                 <button
                   type="button"
                   title="Aperçu de la source"
-                  onClick={() => setPreviewUrl(row.sourceUrl!)}
+                  aria-label="Aperçu de la source"
+                  onClick={() => setPreviewUrl(row.sourceUrl ?? null)}
                   className="text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                 >
                   <svg

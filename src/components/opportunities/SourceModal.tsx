@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 type Props = {
   url: string;
@@ -21,20 +21,30 @@ export function SourceModal({ url, onClose }: Props) {
   const [blockedUrl, setBlockedUrl] = useState<string | null>(null);
   const blocked = blockedUrl === url;
 
+  // Keep a stable ref to onClose so the keydown listener never re-registers.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; });
+
   // Close on Escape key
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, []); // stable, never re-registers
 
   const domain = extractDomain(url);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="flex h-[80vh] w-[90vw] max-w-5xl flex-col rounded-lg bg-white shadow-xl dark:bg-neutral-900">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="flex h-[80vh] w-[90vw] max-w-5xl flex-col rounded-lg bg-white shadow-xl dark:bg-neutral-900"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-200 px-4 py-3 dark:border-neutral-700">
           <div className="flex items-center gap-2 min-w-0">
