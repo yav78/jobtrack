@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/prisma";
 import { POST as postOpportunity, GET as getOpportunities } from "@/app/api/opportunities/route";
+import { PATCH as patchOpportunity } from "@/app/api/opportunities/[id]/route";
 import { NextRequest } from "next/server";
 
 const userId = "00000000-0000-0000-0000-000000000001";
@@ -82,7 +83,7 @@ describe("API opportunities", () => {
       );
       expect(res.status).toBe(201);
       const opp = await res.json();
-      expect(opp.sourceUrl == null).toBe(true);
+      expect(opp.sourceUrl).toBeNull();
     });
 
     it("rejects opportunity with invalid sourceUrl", async () => {
@@ -93,6 +94,44 @@ describe("API opportunities", () => {
         })
       );
       expect(res.status).toBe(400);
+    });
+
+    it("updates sourceUrl via PATCH with a valid URL", async () => {
+      const createRes = await postOpportunity(
+        makeRequest("http://localhost/api/opportunities", "POST", {
+          title: "Op PATCH URL",
+        })
+      );
+      expect(createRes.status).toBe(201);
+      const created = await createRes.json();
+
+      const patchRes = await patchOpportunity(
+        makeRequest(`http://localhost/api/opportunities/${created.id}`, "PATCH", {
+          sourceUrl: "https://example.com/patched-job",
+        }),
+        { params: { id: created.id } as { id: string } }
+      );
+      expect(patchRes.status).toBe(200);
+      const updated = await patchRes.json();
+      expect(updated.sourceUrl).toBe("https://example.com/patched-job");
+    });
+
+    it("rejects PATCH with an invalid sourceUrl", async () => {
+      const createRes = await postOpportunity(
+        makeRequest("http://localhost/api/opportunities", "POST", {
+          title: "Op PATCH bad URL",
+        })
+      );
+      expect(createRes.status).toBe(201);
+      const created = await createRes.json();
+
+      const patchRes = await patchOpportunity(
+        makeRequest(`http://localhost/api/opportunities/${created.id}`, "PATCH", {
+          sourceUrl: "not-a-valid-url",
+        }),
+        { params: { id: created.id } as { id: string } }
+      );
+      expect(patchRes.status).toBe(400);
     });
   });
 });
