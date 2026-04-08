@@ -109,6 +109,19 @@ export function OpportunityEditClient({ opportunity: initialOpportunity }: Props
               {opportunity.description}
             </p>
           )}
+          {opportunity.sourceUrl && (
+            <div className="mt-2 space-y-1">
+              <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Source</p>
+              <a
+                href={opportunity.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-emerald-600 hover:underline dark:text-emerald-400 break-all"
+              >
+                {opportunity.sourceUrl}
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>

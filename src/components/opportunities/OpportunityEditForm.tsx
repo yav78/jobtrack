@@ -71,7 +71,7 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
       const data = await opportunityService.update<WorkOpportunityDTO>(opportunity.id, {
         title: form.title,
         description: form.description || undefined,
-        sourceUrl: form.sourceUrl || undefined,
+        sourceUrl: form.sourceUrl ? form.sourceUrl : null,
         companyId: form.companyId || undefined,
         status: form.status,
         followUpAt: form.followUpAt ? new Date(form.followUpAt).toISOString() : null,
