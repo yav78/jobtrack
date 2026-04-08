@@ -42,6 +42,7 @@ export default async function OpportunityDetailPage({
     id: opp.id,
     title: opp.title,
     description: opp.description,
+    sourceUrl: opp.sourceUrl ?? null,
     status: opp.status,
     followUpAt: opp.followUpAt?.toISOString() ?? null,
     companyId: opp.companyId,
