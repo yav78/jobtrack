@@ -39,7 +39,7 @@ class ContactService extends AbstractCrudService {
 
   async listUnlinked(): Promise<ContactDTO[]> {
     const data = await frontFetchJson<ContactListResponse>(
-      `${this.basePath}?unlinked=true&pageSize=300`
+      `${this.basePath}?unlinked=true&pageSize=100`
     );
     return data.items ?? [];
   }
