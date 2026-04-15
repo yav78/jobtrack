@@ -9,6 +9,7 @@ import { LocationForm } from "@/components/companies/LocationForm";
 import { LocationEditForm } from "@/components/companies/LocationEditForm";
 import { ContactForm } from "@/components/companies/ContactForm";
 import { ContactEditForm } from "@/components/companies/ContactEditForm";
+import { LinkContactForm } from "@/components/companies/LinkContactForm";
 import { CompanyEditForm } from "@/components/companies/CompanyEditForm";
 import type { CompanyDTO, LocationDTO } from "@/lib/dto/company";
 import type { ContactDTO } from "@/lib/dto/contact";
@@ -321,14 +322,25 @@ export default function CompanyDetail() {
                 </p>
               )}
             </div>
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Ajouter un contact</h3>
-              <ContactForm
-                companyId={company.id}
-                onSuccess={(contact: ContactDTO) => {
-                  setCompany({ ...company, contacts: [...(company.contacts ?? []), contact] });
-                }}
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">Nouveau contact</h3>
+                <ContactForm
+                  companyId={company.id}
+                  onSuccess={(contact: ContactDTO) => {
+                    setCompany({ ...company, contacts: [...(company.contacts ?? []), contact] });
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">Lier un contact existant</h3>
+                <LinkContactForm
+                  companyId={company.id}
+                  onSuccess={(contact: ContactDTO) => {
+                    setCompany({ ...company, contacts: [...(company.contacts ?? []), contact] });
+                  }}
+                />
+              </div>
             </div>
           </div>
         )}
