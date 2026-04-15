@@ -36,7 +36,7 @@ describe("API companies/locations", () => {
     await prisma.user.upsert({
       where: { id: userId },
       update: { fullName: "Demo", email: "demo@example.com" },
-      create: { id: userId, fullName: "Demo", email: "demo@example.com" },
+      create: { id: userId, fullName: "Demo", email: "demo@example.com", password: "x" },
     });
   });
 

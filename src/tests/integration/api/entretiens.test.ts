@@ -33,14 +33,14 @@ describe("API entretiens", () => {
     await prisma.user.upsert({
       where: { id: userId },
       update: { fullName: "Demo", email: "demo@example.com" },
-      create: { id: userId, fullName: "Demo", email: "demo@example.com" },
+      create: { id: userId, fullName: "Demo", email: "demo@example.com", password: "x" },
     });
 
     const company = await prisma.company.create({
       data: { name: "EntCo", typeCode: "CLIENT_FINAL", userId },
     });
     const contact = await prisma.contact.create({
-      data: { companyId: company.id, firstName: "Bob", lastName: "Lee" },
+      data: { companyId: company.id, firstName: "Bob", lastName: "Lee", userId },
     });
     const channel = await prisma.contactChannel.create({
       data: { contactId: contact.id, channelTypeCode: "EMAIL", value: "bob@example.com", isPrimary: true },

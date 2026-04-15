@@ -7,11 +7,11 @@ type ContactRow = {
   id: string;
   firstName: string;
   lastName: string;
-  companyId?: string;
+  companyId?: string | null;
   company?: {
     id: string;
     name: string;
-  };
+  } | null;
 };
 
 type Props = {

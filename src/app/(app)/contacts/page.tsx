@@ -17,8 +17,8 @@ type ContactRow = {
   id: string;
   firstName: string;
   lastName: string;
-  companyId: string;
-  company?: { id: string; name: string };
+  companyId: string | null;
+  company?: { id: string; name: string } | null;
 };
 
 function convertToContactRow(contacts: ContactDTO[]): ContactRow[] {

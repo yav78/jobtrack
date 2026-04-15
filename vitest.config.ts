@@ -6,6 +6,7 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["src/tests/**/*.test.ts"],
+    fileParallelism: false,
     server: {
       deps: {
         inline: ["next-auth", "@auth/core"],

@@ -38,7 +38,7 @@ export async function createEntretien(userId: string, data: EntretienCreateInput
   if (!opp) throw NotFound("Opportunity not found");
 
   const channel = await prisma.contactChannel.findFirst({
-    where: { id: validatedData.contactChannelId, contact: { company: { userId } } },
+    where: { id: validatedData.contactChannelId, contact: { userId } },
   });
   if (!channel) throw NotFound("Contact channel not found");
 
@@ -77,7 +77,7 @@ export async function updateEntretien(id: string, userId: string, data: Entretie
   }
   if (validatedData.contactChannelId) {
     const ch = await prisma.contactChannel.findFirst({
-      where: { id: validatedData.contactChannelId, contact: { company: { userId } } },
+      where: { id: validatedData.contactChannelId, contact: { userId } },
     });
     if (!ch) throw NotFound("Contact channel not found");
   }
