@@ -7,7 +7,7 @@ import type { OpportunityActionDTO } from "@/lib/dto/opportunity-action";
 
 type Props = {
   contactId: string;
-  companyId: string;
+  companyId?: string;
 };
 
 export function ContactActionsSection({ contactId, companyId }: Props) {
