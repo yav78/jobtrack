@@ -8,14 +8,13 @@ export async function GET(req: Request) {
     const { page, pageSize, q } = parsePagination(req);
     const { searchParams } = new URL(req.url);
     const companyId = searchParams.get("companyId") ?? undefined;
-    const result = await getContacts(userId, { page, pageSize, q, companyId });
+    const unlinked = searchParams.get("unlinked") === "true";
+    const result = await getContacts(userId, { page, pageSize, q, companyId, unlinked });
     return jsonOk(result);
   } catch (error) {
     return handleRouteError(error);
   }
 }
-
-
 
 export async function POST(req: Request) {
   try {
@@ -28,4 +27,3 @@ export async function POST(req: Request) {
     return handleRouteError(error);
   }
 }
-

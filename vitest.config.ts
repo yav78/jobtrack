@@ -6,10 +6,16 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["src/tests/**/*.test.ts"],
+    server: {
+      deps: {
+        inline: ["next-auth", "@auth/core"],
+      },
+    },
   },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "next/server": path.resolve(__dirname, "./node_modules/next/server.js"),
     },
   },
 });

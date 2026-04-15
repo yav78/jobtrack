@@ -9,7 +9,7 @@ type ChannelUpdateInput = z.infer<typeof contactChannelUpdateSchema>;
 export async function createChannel(contactId: string, userId: string, data: ChannelCreateInput) {
   const validatedData = contactChannelCreateSchema.parse(data);
   const contact = await prisma.contact.findFirst({
-    where: { id: contactId, company: { userId } },
+    where: { id: contactId, userId },
   });
   if (!contact) throw NotFound("Contact not found");
 
@@ -31,7 +31,7 @@ export async function createChannel(contactId: string, userId: string, data: Cha
 export async function updateChannel(id: string, userId: string, data: ChannelUpdateInput) {
   const validatedData = contactChannelUpdateSchema.parse(data);
   const channel = await prisma.contactChannel.findFirst({
-    where: { id, contact: { company: { userId } } },
+    where: { id, contact: { userId } },
   });
   if (!channel) throw NotFound("Channel not found");
 
@@ -57,7 +57,7 @@ export async function updateChannel(id: string, userId: string, data: ChannelUpd
 
 export async function deleteChannel(id: string, userId: string) {
   await prisma.contactChannel.delete({
-    where: { id, contact: { company: { userId } } },
+    where: { id, contact: { userId } },
   });
   return { success: true };
 }
