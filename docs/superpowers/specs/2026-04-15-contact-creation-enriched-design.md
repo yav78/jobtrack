@@ -163,9 +163,37 @@ Sous-modale légère (composant `Modal` existant) affichée par-dessus la modale
 
 ---
 
-## 6. Ce qui n'est PAS dans le scope
+## 6. Édition — lier une entreprise après création
+
+Un contact créé sans entreprise doit pouvoir être lié à une entreprise plus tard.
+
+### `ContactEditForm` — `src/components/companies/ContactEditForm.tsx`
+
+Ajout d'un champ **Entreprise** (optionnel) :
+
+| Champ | Comportement |
+|---|---|
+| Entreprise *(optionnel)* | `<select>` peuplé via `companyService.list()`. Option "Aucune" (valeur `""`). Bouton `+ Créer une entreprise` → ouvre `CompanyQuickCreateModal`. |
+| Prénom / Nom | Inchangé |
+| Rôle | Inchangé |
+| Notes | Inchangé |
+
+Soumission : `PATCH /api/contacts/:id` avec `companyId` (uuid ou `null` pour délier).
+
+### Service `updateContact`
+
+Si `companyId` est fourni dans le payload, vérifier que la company appartient à `userId` avant la mise à jour (même logique que `createContact`). Si `companyId` est explicitement `null`, délier.
+
+### Page détail contact — `src/app/(app)/contacts/[id]/page.tsx`
+
+La page n'a pas encore de bouton "Modifier". Ajout :
+- Bouton **"Modifier"** dans l'en-tête (à côté de "Envoyer un email").
+- Clic → ouvre une `Modal` avec `ContactEditForm` (le composant devient `'use client'` ou la page est partiellement client-side via un wrapper).
+- Affichage du nom de l'entreprise liée dans l'en-tête (ou "Sans entreprise" si null).
+
+---
+
+## 7. Ce qui n'est PAS dans le scope
 
 - Ajouter un label ou marquer un canal "principal" lors de la création (possible après via la page détail du contact).
-- Modifier la page détail du contact (`/contacts/[id]`).
-- Modifier le formulaire d'édition de contact.
 - Export CSV (les contacts sans entreprise apparaîtront avec une colonne `company` vide).
