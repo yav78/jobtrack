@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { pushToast } from "@/components/common/Toast";
 import type { ContactDTO } from "@/lib/dto/contact";
 import contactService from "@/lib/services/front/contact.service";
+import companyService from "@/lib/services/front/company.service";
+import { CompanyQuickCreateModal } from "@/components/companies/CompanyQuickCreateModal";
+
+type CompanyOption = { id: string; name: string };
 
 type Props = {
   contact: ContactDTO;
@@ -13,16 +17,23 @@ type Props = {
 
 export function ContactEditForm({ contact, onSuccess, onCancel }: Props) {
   const [loading, setLoading] = useState(false);
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [form, setForm] = useState({
+    companyId: contact.companyId ?? "",
     firstName: contact.firstName,
     lastName: contact.lastName,
     roleTitle: contact.roleTitle || "",
     notes: contact.notes || "",
   });
 
-  // Mettre à jour le formulaire si le contact change
+  useEffect(() => {
+    companyService.list().then(setCompanies);
+  }, []);
+
   useEffect(() => {
     setForm({
+      companyId: contact.companyId ?? "",
       firstName: contact.firstName,
       lastName: contact.lastName,
       roleTitle: contact.roleTitle || "",
@@ -35,6 +46,7 @@ export function ContactEditForm({ contact, onSuccess, onCancel }: Props) {
     setLoading(true);
     try {
       const data = await contactService.update<ContactDTO>(contact.id, {
+        companyId: form.companyId || null,
         firstName: form.firstName,
         lastName: form.lastName,
         roleTitle: form.roleTitle || undefined,
@@ -51,68 +63,97 @@ export function ContactEditForm({ contact, onSuccess, onCancel }: Props) {
   };
 
   return (
-    <form className="space-y-3" onSubmit={submit}>
-      <div className="grid grid-cols-2 gap-2">
+    <>
+      <CompanyQuickCreateModal
+        open={quickCreateOpen}
+        onClose={() => setQuickCreateOpen(false)}
+        onSuccess={(company) => {
+          setCompanies((prev) => [...prev, company]);
+          setForm((f) => ({ ...f, companyId: company.id }));
+        }}
+      />
+      <form className="space-y-3" onSubmit={submit}>
         <div className="space-y-1">
-          <label className="text-sm font-medium">Prénom</label>
+          <label className="text-sm font-medium">
+            Entreprise <span className="font-normal text-neutral-400">(optionnel)</span>
+          </label>
+          <div className="flex gap-2">
+            <select
+              className="flex-1 rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              value={form.companyId}
+              onChange={(e) => setForm({ ...form, companyId: e.target.value })}
+            >
+              <option value="">Aucune</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => setQuickCreateOpen(true)}
+              className="whitespace-nowrap rounded border border-emerald-600 px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+            >
+              + Créer
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Prénom</label>
+            <input
+              className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              value={form.firstName}
+              onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Nom</label>
+            <input
+              className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              value={form.lastName}
+              onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+              required
+            />
+          </div>
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Rôle</label>
           <input
             className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-            value={form.firstName}
-            onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-            required
+            value={form.roleTitle}
+            onChange={(e) => setForm({ ...form, roleTitle: e.target.value })}
           />
         </div>
         <div className="space-y-1">
-          <label className="text-sm font-medium">Nom</label>
-          <input
+          <label className="text-sm font-medium">Notes</label>
+          <textarea
             className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-            value={form.lastName}
-            onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-            required
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            rows={3}
           />
         </div>
-      </div>
-      <div className="space-y-1">
-        <label className="text-sm font-medium">Rôle</label>
-        <input
-          className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-          value={form.roleTitle}
-          onChange={(e) => setForm({ ...form, roleTitle: e.target.value })}
-        />
-      </div>
-      <div className="space-y-1">
-        <label className="text-sm font-medium">Notes</label>
-        <textarea
-          className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-          value={form.notes}
-          onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          rows={3}
-        />
-      </div>
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex-1 rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50"
-        >
-          {loading ? "En cours..." : "Enregistrer"}
-        </button>
-        {onCancel && (
+        <div className="flex gap-2">
           <button
-            type="button"
-            onClick={onCancel}
+            type="submit"
             disabled={loading}
-            className="rounded border border-neutral-300 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800 disabled:opacity-50"
+            className="flex-1 rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50"
           >
-            Annuler
+            {loading ? "En cours..." : "Enregistrer"}
           </button>
-        )}
-      </div>
-    </form>
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={loading}
+              className="rounded border border-neutral-300 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800 disabled:opacity-50"
+            >
+              Annuler
+            </button>
+          )}
+        </div>
+      </form>
+    </>
   );
 }
-
-
-
-
-
