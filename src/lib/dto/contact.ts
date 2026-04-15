@@ -13,7 +13,8 @@ export type ContactChannelDTO = {
 
 export type ContactDTO = {
   id: string;
-  companyId: string;
+  userId: string;
+  companyId: string | null;
   firstName: string;
   lastName: string;
   roleTitle?: string | null;
@@ -22,6 +23,6 @@ export type ContactDTO = {
   createdAt: string;
   updatedAt: string;
   channels?: ContactChannelDTO[];
-  company?: CompanyDTO;
+  company?: CompanyDTO | null;
 };
 
