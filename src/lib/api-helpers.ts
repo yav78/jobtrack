@@ -68,7 +68,7 @@ export async function ensureCompanyOwnership(companyId: string, userId: string) 
 
 export async function ensureContactOwnership(contactId: string, userId: string) {
   const contact = await prisma.contact.findFirst({
-    where: { id: contactId, company: { userId } },
+    where: { id: contactId, userId },
   });
   if (!contact) throw NotFound("Contact not found");
   return contact;

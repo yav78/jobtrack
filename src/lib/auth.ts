@@ -14,12 +14,17 @@ export async function resolveUser(): Promise<AuthContext> {
     if (session?.user?.id) {
       return { userId: session.user.id };
     }
-  } catch {
-    // Outside of a Next.js request scope (e.g. Vitest integration tests):
-    // fall back to the demo user id so integration tests can exercise routes.
-    if (env.NODE_ENV !== "production" && env.AUTH_DEMO_USER_ID) {
+  } catch (err) {
+    // Only fall back when called outside a Next.js request scope
+    // (e.g. Vitest integration tests that call route handlers directly).
+    // Real auth errors (wrong config, DB down, etc.) must propagate.
+    const isOutsideRequestScope =
+      err instanceof Error &&
+      err.message.includes("outside a request scope");
+    if (isOutsideRequestScope && env.NODE_ENV !== "production" && env.AUTH_DEMO_USER_ID) {
       return { userId: env.AUTH_DEMO_USER_ID };
     }
+    throw err;
   }
   throw Unauthorized("Authentification requise");
 }
