@@ -6,6 +6,7 @@ import { OpportunityForm } from "@/components/opportunities/OpportunityForm";
 import { OpportunitiesTable } from "@/components/opportunities/OpportunitiesTable";
 import { Pagination } from "@/components/common/Pagination";
 import { ExportButton } from "@/components/common/ExportButton";
+import { Modal } from "@/components/common/Modal";
 import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
 import opportunityService from "@/lib/services/front/opportunity.service";
 import { frontFetchJson } from "@/lib/services/front/abstract-crus.service";
@@ -34,6 +35,7 @@ export default function OpportunitiesPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const loadOpportunities = useCallback(
     async (p: number, q: string, status: string) => {
@@ -63,6 +65,7 @@ export default function OpportunitiesPage() {
   }, [search, statusFilter]);
 
   const handleSuccess = async () => {
+    setCreateOpen(false);
     await loadOpportunities(1, search, statusFilter);
     router.refresh();
   };
@@ -92,10 +95,19 @@ export default function OpportunitiesPage() {
             Liste et création d&apos;opportunités.
           </p>
         </div>
-        <ExportButton href="/api/export/opportunities" label="Exporter CSV" />
+        <div className="flex items-center gap-2">
+          <ExportButton href="/api/export/opportunities" label="Exporter CSV" />
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="rounded bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+          >
+            Nouvelle opportunité
+          </button>
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+      <div>
         <div className="space-y-4">
           {/* Recherche + filtres */}
           <div className="card space-y-3">
@@ -175,12 +187,11 @@ export default function OpportunitiesPage() {
             )}
           </div>
         </div>
-
-        <div className="card">
-          <h2 className="text-lg font-semibold">Créer une opportunité</h2>
-          <OpportunityForm onSuccess={handleSuccess} />
-        </div>
       </div>
+
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nouvelle opportunité">
+        <OpportunityForm onSuccess={handleSuccess} />
+      </Modal>
 
       <ConfirmDialog
         open={confirmOpen}

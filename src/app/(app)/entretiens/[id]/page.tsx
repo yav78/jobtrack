@@ -1,23 +1,19 @@
-import { notFound } from "next/navigation";
-import { apiGet } from "@/lib/api";
-import type { EntretienDTO } from "@/lib/dto/entretien";
-
-type EntretienDetail = EntretienDTO & {
-  contactChannel?: { value: string };
-  workOpportunity?: { title: string };
-};
-
-async function fetchEntretien(id: string): Promise<EntretienDetail | null> {
-  try {
-    return await apiGet<EntretienDetail>(`/api/entretiens/${id}`);
-  } catch {
-    return null;
-  }
-}
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { getEntretien } from "@/lib/services/back/entretiens";
+import { HttpError } from "@/lib/errors";
 
 export default async function EntretienDetailPage({ params }: { params: { id: string } }) {
-  const entretien = await fetchEntretien(params.id);
-  if (!entretien) return notFound();
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  let entretien: Awaited<ReturnType<typeof getEntretien>>;
+  try {
+    entretien = await getEntretien(params.id, session.user.id);
+  } catch (e) {
+    if (e instanceof HttpError && e.status === 404) return notFound();
+    throw e;
+  }
 
   return (
     <div className="space-y-3">
