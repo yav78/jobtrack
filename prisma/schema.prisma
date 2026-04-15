@@ -15,6 +15,7 @@ model User {
   updatedAt     DateTime            @updatedAt
   password      String
   companies     Company[]
+  contacts      Contact[]
   entretiens    Entretien[]
   actions       OpportunityAction[]
   opportunities WorkOpportunity[]
@@ -72,7 +73,8 @@ model Location {
 
 model Contact {
   id                String                     @id @default(uuid()) @db.Uuid
-  companyId         String                     @db.Uuid
+  userId            String                     @db.Uuid
+  companyId         String?                    @db.Uuid
   firstName         String
   lastName          String
   roleTitle         String?
@@ -82,12 +84,14 @@ model Contact {
   createdAt         DateTime                   @default(now())
   updatedAt         DateTime                   @updatedAt
   basedAt           Location?                  @relation("ContactLocation", fields: [basedAtLocationId], references: [id])
-  company           Company                    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user              User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company           Company?                   @relation(fields: [companyId], references: [id], onDelete: SetNull)
   channels          ContactChannel[]
   entretienLinks    EntretienContact[]
   actionLinks       OpportunityActionContact[]
   actionsAsMainContact OpportunityAction[]
 
+  @@index([userId])
   @@index([companyId])
 }
 
