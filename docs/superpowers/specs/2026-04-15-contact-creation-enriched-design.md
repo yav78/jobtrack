@@ -193,7 +193,48 @@ La page n'a pas encore de bouton "Modifier". Ajout :
 
 ---
 
-## 7. Ce qui n'est PAS dans le scope
+## 7. Page entreprise — lier un contact existant
+
+Sur la page `/companies/[id]`, onglet **Contacts**, la colonne droite affiche actuellement un formulaire de création de contact (`ContactForm` de `src/components/companies/ContactForm.tsx`). Il faut ajouter une section **"Lier un contact existant"** en dessous.
+
+### Nouveau composant `LinkContactForm` — `src/components/companies/LinkContactForm.tsx`
+
+Un `<select>` peuplé avec les contacts de l'utilisateur qui n'ont **pas de companyId** (`companyId === null`). Bouton "Lier".
+
+- Au chargement : appel `GET /api/contacts?unlinked=true` pour ne récupérer que les contacts sans entreprise.
+- Soumission : `PATCH /api/contacts/:id` avec `{ companyId: <id de l'entreprise courante> }`.
+- En cas de succès : le contact est ajouté à la liste gauche (contacts de l'entreprise), retiré du `<select>`. Toast succès.
+- Si aucun contact sans entreprise : afficher "Aucun contact à lier."
+
+### API — `GET /api/contacts`
+
+Ajout du paramètre query `unlinked=true` qui filtre `companyId: null`.
+
+Dans `getContacts(userId, options)` :
+
+```typescript
+...(options?.unlinked ? { companyId: null } : {}),
+```
+
+### Page entreprise — `src/app/(app)/companies/[id]/page.tsx`
+
+La colonne droite de l'onglet contacts devient :
+
+```
+┌─────────────────────────────┐
+│  Créer un nouveau contact   │  ← ContactForm existant
+│  [formulaire actuel]        │
+│                             │
+│  ── ou ──                   │
+│                             │
+│  Lier un contact existant   │  ← LinkContactForm (nouveau)
+│  [select] [Lier]            │
+└─────────────────────────────┘
+```
+
+---
+
+## 8. Ce qui n'est PAS dans le scope
 
 - Ajouter un label ou marquer un canal "principal" lors de la création (possible après via la page détail du contact).
 - Export CSV (les contacts sans entreprise apparaîtront avec une colonne `company` vide).
