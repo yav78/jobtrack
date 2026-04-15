@@ -1,9 +1,9 @@
-import { absoluteUrl } from "@/lib/api";
+import { resolveFetchUrl } from "@/lib/api";
 import type { CrudServiceInterface } from "./crud-service.interface";
 
 async function frontFetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   const isHttp = path.startsWith("http://") || path.startsWith("https://");
-  const url = isHttp ? path : absoluteUrl(path);
+  const url = isHttp ? path : await resolveFetchUrl(path);
 
   // Ajouter les cookies côté serveur pour les appels API authentifiés
   let cookieHeader: string | undefined;
