@@ -8,7 +8,7 @@ export const documentCreateSchema = z.object({
 export const documentUpdateSchema = z
   .object({
     title: z.string().min(1).max(255).optional(),
-    description: z.string().max(1000).optional(),
+    description: z.string().max(1000).nullable().optional(),
   })
   .refine((data) => data.title !== undefined || data.description !== undefined, {
     message: "Au moins un champ est requis",

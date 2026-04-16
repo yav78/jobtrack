@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { marked } from "marked";
+import DOMPurify from "isomorphic-dompurify";
 import type { DocumentDTO } from "@/lib/dto/document";
 
 type Props = {
@@ -52,7 +53,7 @@ export function DocumentPreviewModal({ document, onClose }: Props) {
         .then((res) => res.text())
         .then(async (text) => {
           if (isMarkdown(document.mimeType)) {
-            const html = String(await marked.parse(text));
+            const html = DOMPurify.sanitize(String(await marked.parse(text)));
             setMarkdownHtml(html);
           } else {
             setTextContent(text);

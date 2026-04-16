@@ -38,7 +38,7 @@ async function listDocuments(): Promise<DocumentDTO[]> {
 
 async function updateDocument(
   id: string,
-  data: { title?: string; description?: string }
+  data: { title?: string; description?: string | null }
 ): Promise<DocumentDTO> {
   const result = await frontFetchJson<DocumentResponse>(`/api/documents/${id}`, {
     method: "PATCH",

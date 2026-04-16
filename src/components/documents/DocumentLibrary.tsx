@@ -61,7 +61,7 @@ export function DocumentLibrary() {
     try {
       const updated = await documentService.update(editingDoc.id, {
         title: editTitle.trim() || undefined,
-        description: editDescription.trim() || undefined,
+        description: editDescription.trim() !== "" ? editDescription.trim() : null,
       });
       setDocuments((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
       setEditingDoc(null);

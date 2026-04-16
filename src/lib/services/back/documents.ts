@@ -8,9 +8,6 @@ export function getUploadsBase(): string {
   return process.env.UPLOADS_DIR ?? path.join(process.cwd(), "uploads");
 }
 
-export function getFilePath(userId: string, filename: string): string {
-  return path.join(getUploadsBase(), userId, filename);
-}
 
 export async function ensureUserUploadsDir(userId: string): Promise<void> {
   const dir = path.join(getUploadsBase(), userId);
@@ -45,7 +42,7 @@ export async function createDocument(
 export async function updateDocument(
   id: string,
   userId: string,
-  data: { title?: string; description?: string }
+  data: { title?: string; description?: string | null }
 ): Promise<Document> {
   const existing = await prisma.document.findFirst({ where: { id, userId } });
   if (!existing) throw NotFound("Document introuvable");
