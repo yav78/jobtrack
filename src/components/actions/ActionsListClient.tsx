@@ -326,10 +326,6 @@ export const ActionsListClient = forwardRef<ActionsListClientHandle, Props>(func
                               timeStyle: "short",
                             })}
                           </span>
-                          <span>·</span>
-                          <span className="font-mono" title={action.id}>
-                            #{action.id.slice(0, 8)}…
-                          </span>
                         </div>
                       </div>
                     </div>
