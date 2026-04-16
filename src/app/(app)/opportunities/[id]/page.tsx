@@ -1,7 +1,5 @@
 import { notFound } from "next/navigation";
-import { OpportunityTimeline } from "@/components/opportunities/OpportunityTimeline";
-import { ActionPageClient } from "@/components/opportunities/ActionPageClient";
-import { ActionTypeFilterClient } from "@/components/opportunities/ActionTypeFilterClient";
+import { OpportunityActionsSection } from "@/components/opportunities/OpportunityActionsSection";
 import { OpportunityEditClient } from "@/components/opportunities/OpportunityEditClient";
 import { OpportunityEmailButton } from "@/components/opportunities/OpportunityEmailButton";
 import { getOpportunity } from "@/lib/services/back/opportunities";
@@ -35,7 +33,7 @@ export default async function OpportunityDetailPage({
     return notFound();
   }
 
-  const type = resolvedSearchParams?.type;
+  const initialType = resolvedSearchParams?.type;
 
   // Transformer l'opportunité en DTO pour le composant client
   const opportunityDTO = {
@@ -69,14 +67,13 @@ export default async function OpportunityDetailPage({
       </div>
 
       <div className="card space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Timeline des actions</h3>
-          <ActionPageClient opportunityId={resolvedParams.id} companyId={opp.companyId} />
-        </div>
+        <h3 className="text-sm font-semibold">Timeline des actions</h3>
 
-        <ActionTypeFilterClient opportunityId={resolvedParams.id} />
-
-        <OpportunityTimeline opportunityId={resolvedParams.id} type={type} />
+        <OpportunityActionsSection
+          opportunityId={resolvedParams.id}
+          companyId={opp.companyId}
+          initialType={initialType}
+        />
       </div>
     </div>
   );

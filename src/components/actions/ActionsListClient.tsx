@@ -69,11 +69,19 @@ function hasMetadata(meta: Record<string, unknown> | null | undefined) {
 type Props = {
   initialType?: string;
   contactId?: string;
+  workOpportunityId?: string;
+  companyId?: string;
   onEdit?: (action: OpportunityActionDTO) => void;
+  /** Masquer le lien vers l'opportunité/entreprise (contexte déjà connu) */
+  hideOpportunityLink?: boolean;
+  /** Masquer le sélecteur "Filtrer par type" */
+  hideTypeFilter?: boolean;
+  /** Message affiché quand il n'y a pas d'action */
+  emptyMessage?: string;
 };
 
 export const ActionsListClient = forwardRef<ActionsListClientHandle, Props>(function ActionsListClient(
-  { initialType, contactId, onEdit },
+  { initialType, contactId, workOpportunityId, companyId, onEdit, hideOpportunityLink, hideTypeFilter, emptyMessage },
   ref
 ) {
   const [actions, setActions] = useState<OpportunityActionDTO[]>([]);
@@ -95,6 +103,8 @@ export const ActionsListClient = forwardRef<ActionsListClientHandle, Props>(func
       const items = await opportunityActionService.listAll({
         type: typeFilter || undefined,
         contactId: contactId || undefined,
+        workOpportunityId: workOpportunityId || undefined,
+        companyId: companyId || undefined,
       });
       setActions(items);
     } catch {
@@ -106,7 +116,8 @@ export const ActionsListClient = forwardRef<ActionsListClientHandle, Props>(func
 
   useEffect(() => {
     loadActions();
-  }, [typeFilter, contactId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeFilter, contactId, workOpportunityId, companyId]);
 
   const onDeleted = () => {
     loadActions();
@@ -116,27 +127,29 @@ export const ActionsListClient = forwardRef<ActionsListClientHandle, Props>(func
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium">Filtrer par type :</span>
-        <select
-          className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-        >
-          <option value="">Tous</option>
-          {ACTION_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      {!hideTypeFilter && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium">Filtrer par type :</span>
+          <select
+            className="rounded border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          >
+            <option value="">Tous</option>
+            {ACTION_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {loading ? (
         <div className="py-8 text-center text-sm text-neutral-500">Chargement…</div>
       ) : actions.length === 0 ? (
         <div className="py-8 text-center text-sm text-neutral-500">
-          {contactId ? "Aucune action avec ce contact" : "Aucune action enregistrée"}
+          {emptyMessage ?? (contactId ? "Aucune action avec ce contact" : "Aucune action enregistrée")}
         </div>
       ) : (
         <div className="space-y-6">
@@ -186,7 +199,7 @@ export const ActionsListClient = forwardRef<ActionsListClientHandle, Props>(func
                                 </Link>
                               </span>
                             )}
-                            {action.workOpportunity && (
+                            {!hideOpportunityLink && action.workOpportunity && (
                               <Link
                                 href={`/opportunities/${action.workOpportunity.id}`}
                                 className="text-xs text-emerald-600 hover:underline dark:text-emerald-400"
@@ -194,7 +207,7 @@ export const ActionsListClient = forwardRef<ActionsListClientHandle, Props>(func
                                 {action.workOpportunity.title}
                               </Link>
                             )}
-                            {action.company && !action.workOpportunity && (
+                            {!hideOpportunityLink && action.company && !action.workOpportunity && (
                               <Link
                                 href={`/companies/${action.company.id}`}
                                 className="text-xs text-emerald-600 hover:underline dark:text-emerald-400"

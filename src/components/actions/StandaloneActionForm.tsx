@@ -36,6 +36,8 @@ type Props = {
   /** Contact pré-sélectionné (ex. depuis la page contact) */
   defaultContactId?: string;
   defaultCompanyId?: string;
+  /** Opportunité pré-sélectionnée (création d'action liée à une opportunité) */
+  defaultWorkOpportunityId?: string;
   /** Appelé après création ou mise à jour réussie */
   onSuccess?: (action: OpportunityActionDTO) => void;
   /** Mode édition : id de l’action à modifier */
@@ -81,6 +83,7 @@ export function StandaloneActionForm({
   onClose,
   defaultContactId,
   defaultCompanyId,
+  defaultWorkOpportunityId,
   onSuccess,
   actionId: editActionId,
   initialData,
@@ -159,6 +162,7 @@ export function StandaloneActionForm({
         channelTypeCode: form.channelTypeCode || undefined,
         contactId: form.contactId || undefined,
         companyId: form.companyId || undefined,
+        workOpportunityId: defaultWorkOpportunityId || undefined,
         participantContactIds:
           form.participantContactIds.length > 0 ? form.participantContactIds : undefined,
       };

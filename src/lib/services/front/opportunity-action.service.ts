@@ -17,10 +17,17 @@ class OpportunityActionService extends AbstractCrudService {
     return data.items ?? [];
   }
 
-  async listAll(filters?: { type?: string; contactId?: string }): Promise<OpportunityActionDTO[]> {
+  async listAll(filters?: {
+    type?: string;
+    contactId?: string;
+    workOpportunityId?: string;
+    companyId?: string;
+  }): Promise<OpportunityActionDTO[]> {
     const params = new URLSearchParams();
     if (filters?.type) params.set("type", filters.type);
     if (filters?.contactId) params.set("contactId", filters.contactId);
+    if (filters?.workOpportunityId) params.set("workOpportunityId", filters.workOpportunityId);
+    if (filters?.companyId) params.set("companyId", filters.companyId);
     const query = params.toString() ? `?${params.toString()}` : "";
     const data = await frontFetchJson<OpportunityActionListResponse>(`/api/actions${query}`);
     return data.items ?? [];
