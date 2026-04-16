@@ -1,5 +1,13 @@
 import type { OpportunityActionType } from "@prisma/client";
 
+export type ActionDocumentSummary = {
+  id: string;
+  title: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+};
+
 export type OpportunityActionDTO = {
   id: string;
   occurredAt: string;
@@ -46,4 +54,5 @@ export type OpportunityActionDTO = {
     lastName: string;
     company?: { id: string; name: string };
   } | null;
+  documents?: Array<ActionDocumentSummary>;
 };

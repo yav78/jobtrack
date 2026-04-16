@@ -46,6 +46,19 @@ type OpportunityActionWithOpportunity = Prisma.OpportunityActionGetPayload<{
         };
       };
     };
+    documents: {
+      include: {
+        document: {
+          select: {
+            id: true;
+            title: true;
+            originalName: true;
+            mimeType: true;
+            size: true;
+          };
+        };
+      };
+    };
     workOpportunity: {
       select: {
         id: true;
@@ -153,6 +166,19 @@ export async function getRecentOpportunityActions(
           },
         },
       },
+      documents: {
+        include: {
+          document: {
+            select: {
+              id: true,
+              title: true,
+              originalName: true,
+              mimeType: true,
+              size: true,
+            },
+          },
+        },
+      },
       workOpportunity: {
         select: {
           id: true,
@@ -242,6 +268,19 @@ export async function getAllActions(
           },
         },
       },
+      documents: {
+        include: {
+          document: {
+            select: {
+              id: true,
+              title: true,
+              originalName: true,
+              mimeType: true,
+              size: true,
+            },
+          },
+        },
+      },
       workOpportunity: {
         select: {
           id: true,
@@ -305,6 +344,19 @@ export async function getOpportunityActionById(
               id: true,
               firstName: true,
               lastName: true,
+            },
+          },
+        },
+      },
+      documents: {
+        include: {
+          document: {
+            select: {
+              id: true,
+              title: true,
+              originalName: true,
+              mimeType: true,
+              size: true,
             },
           },
         },
@@ -380,6 +432,19 @@ export async function createOpportunityAction(
               id: true,
               firstName: true,
               lastName: true,
+            },
+          },
+        },
+      },
+      documents: {
+        include: {
+          document: {
+            select: {
+              id: true,
+              title: true,
+              originalName: true,
+              mimeType: true,
+              size: true,
             },
           },
         },

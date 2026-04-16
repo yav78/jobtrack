@@ -56,6 +56,16 @@ function groupByDay(actions: OpportunityActionDTO[]): Array<{ day: string; label
   }));
 }
 
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+}
+
+function hasMetadata(meta: Record<string, unknown> | null | undefined) {
+  return meta != null && typeof meta === "object" && !Array.isArray(meta) && Object.keys(meta).length > 0;
+}
+
 type Props = {
   initialType?: string;
   contactId?: string;
@@ -215,21 +225,111 @@ export const ActionsListClient = forwardRef<ActionsListClientHandle, Props>(func
                           <p className="text-sm text-neutral-700 dark:text-neutral-300">{action.notes}</p>
                         )}
 
-                        <div className="flex flex-wrap gap-2 text-xs text-neutral-600 dark:text-neutral-400">
-                          {action.contactChannel && (
-                            <span className="flex items-center gap-1">
-                              <span className="font-medium">Canal:</span>
-                              <span>{action.contactChannel.value}</span>
-                            </span>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          {action.documents && action.documents.length > 0 && (
+                            <div className="space-y-1.5">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                                Documents
+                              </p>
+                              <ul className="space-y-1.5 text-xs">
+                                {action.documents.map((doc) => (
+                                  <li key={doc.id}>
+                                    <a
+                                      href={`/api/documents/${doc.id}/file?download=true`}
+                                      className="text-emerald-600 hover:underline dark:text-emerald-400"
+                                      target="_blank"
+                                      rel="noreferrer"
+                                    >
+                                      <span className="font-medium">{doc.title}</span>
+                                      <span className="text-neutral-600 dark:text-neutral-400">
+                                        {" "}
+                                        · {doc.originalName} · {formatFileSize(doc.size)} · {doc.mimeType}
+                                      </span>
+                                    </a>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
                           )}
+
+                          {(action.contactChannel || action.channelTypeCode) && (
+                            <div className="space-y-1.5">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                                Canal
+                              </p>
+                              {action.contactChannel ? (
+                                <dl className="space-y-0.5 text-xs text-neutral-700 dark:text-neutral-300">
+                                  <div className="flex gap-2">
+                                    <dt className="font-medium text-neutral-500 dark:text-neutral-400">Valeur</dt>
+                                    <dd>{action.contactChannel.value}</dd>
+                                  </div>
+                                  {action.contactChannel.label && (
+                                    <div className="flex gap-2">
+                                      <dt className="font-medium text-neutral-500 dark:text-neutral-400">Libellé</dt>
+                                      <dd>{action.contactChannel.label}</dd>
+                                    </div>
+                                  )}
+                                </dl>
+                              ) : (
+                                <p className="text-xs text-neutral-700 dark:text-neutral-300">
+                                  <span className="font-medium text-neutral-500 dark:text-neutral-400">Type :</span>{" "}
+                                  {action.channelTypeCode}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
                           {action.participants && action.participants.length > 0 && (
-                            <span>
-                              <span className="font-medium">Participants:</span>{" "}
-                              {action.participants
-                                .map((p) => `${p.contact.firstName} ${p.contact.lastName}`)
-                                .join(", ")}
-                            </span>
+                            <div className="space-y-1.5 sm:col-span-2">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                                Participants
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {action.participants.map((p) => (
+                                  <Link
+                                    key={p.contactId}
+                                    href={`/contacts/${p.contact.id}`}
+                                    className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs text-neutral-800 hover:border-emerald-500/40 hover:bg-emerald-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:border-emerald-500/30 dark:hover:bg-emerald-950/40"
+                                  >
+                                    {p.contact.firstName} {p.contact.lastName}
+                                  </Link>
+                                ))}
+                              </div>
+                            </div>
                           )}
+
+                          {hasMetadata(action.metadata) && (
+                            <div className="space-y-1.5 sm:col-span-2">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                                Métadonnées
+                              </p>
+                              <pre className="max-h-40 overflow-auto rounded border border-neutral-200 bg-neutral-50 p-2 font-mono text-[11px] leading-relaxed text-neutral-800 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-200">
+                                {JSON.stringify(action.metadata, null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-0.5 border-t border-neutral-200 pt-2 text-[11px] text-neutral-500 dark:border-neutral-800 dark:text-neutral-500">
+                          <span>
+                            Créée le{" "}
+                            {new Date(action.createdAt).toLocaleString("fr-FR", {
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })}
+                          </span>
+                          <span>·</span>
+                          <span>
+                            Mise à jour{" "}
+                            {new Date(action.updatedAt).toLocaleString("fr-FR", {
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })}
+                          </span>
+                          <span>·</span>
+                          <span className="font-mono" title={action.id}>
+                            #{action.id.slice(0, 8)}…
+                          </span>
                         </div>
                       </div>
                     </div>

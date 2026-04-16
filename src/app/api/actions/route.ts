@@ -4,6 +4,11 @@ import { getAllActions, createOpportunityAction } from "@/lib/services/back/oppo
 import { opportunityActionCreateSchema } from "@/lib/validators/opportunity-action";
 import { prisma } from "@/lib/prisma";
 import type { OpportunityActionType } from "@prisma/client";
+import type { ActionDocumentSummary } from "@/lib/dto/opportunity-action";
+
+export type ActionDocumentRelation = {
+  document: ActionDocumentSummary;
+};
 
 export function actionToDto(action: {
   id: string;
@@ -36,6 +41,7 @@ export function actionToDto(action: {
     lastName: string;
     company?: { id: string; name: string } | null;
   } | null;
+  documents?: Array<ActionDocumentRelation>;
 }) {
   return {
     id: action.id,
@@ -82,6 +88,16 @@ export function actionToDto(action: {
           company: action.contact.company ?? undefined,
         }
       : undefined,
+    documents:
+      action.documents && action.documents.length > 0
+        ? action.documents.map((row) => ({
+            id: row.document.id,
+            title: row.document.title,
+            originalName: row.document.originalName,
+            mimeType: row.document.mimeType,
+            size: row.document.size,
+          }))
+        : undefined,
   };
 }
 
