@@ -12,6 +12,7 @@ import companyService from "@/lib/services/front/company.service";
 import contactService from "@/lib/services/front/contact.service";
 import channelTypeService from "@/lib/services/front/channel-type.service";
 import opportunityActionService from "@/lib/services/front/opportunity-action.service";
+import { ActionDocumentPicker } from "@/components/documents/ActionDocumentPicker";
 
 const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
   { value: "INTERVIEW", label: "Entretien" },
@@ -318,6 +319,13 @@ export function StandaloneActionForm({
             rows={3}
           />
         </div>
+
+        {editActionId && (
+          <div className="border-t border-neutral-200 pt-4 dark:border-neutral-700">
+            <h3 className="mb-2 text-sm font-medium">Documents liés</h3>
+            <ActionDocumentPicker actionId={editActionId} />
+          </div>
+        )}
 
         <div className="flex justify-end gap-2">
           <button
