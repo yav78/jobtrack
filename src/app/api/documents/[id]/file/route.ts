@@ -30,7 +30,7 @@ export async function GET(req: Request, { params }: Params) {
       ? `attachment; filename*=UTF-8''${encodeURIComponent(doc.originalName)}`
       : `inline; filename*=UTF-8''${encodeURIComponent(doc.originalName)}`;
 
-    return new Response(buffer, {
+    return new Response(new Uint8Array(buffer), {
       headers: {
         "Content-Type": doc.mimeType,
         "Content-Length": buffer.length.toString(),
