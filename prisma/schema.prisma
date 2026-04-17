@@ -20,6 +20,7 @@ model User {
   actions       OpportunityAction[]
   opportunities WorkOpportunity[]
   documents     Document[]
+  links         Link[]
 }
 
 model CompanyType {
@@ -254,4 +255,27 @@ model ActionDocument {
 
   @@id([actionId, documentId])
   @@index([documentId])
+}
+
+enum LinkCategory {
+  JOBBOARD
+  TOOL
+  NETWORK
+  OTHER
+}
+
+model Link {
+  id        String       @id @default(uuid()) @db.Uuid
+  userId    String       @db.Uuid
+  title     String
+  url       String
+  notes     String?
+  category  LinkCategory @default(OTHER)
+  deletedAt DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([category])
 }
