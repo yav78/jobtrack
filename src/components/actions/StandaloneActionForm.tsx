@@ -12,6 +12,9 @@ import companyService from "@/lib/services/front/company.service";
 import contactService from "@/lib/services/front/contact.service";
 import channelTypeService from "@/lib/services/front/channel-type.service";
 import opportunityActionService from "@/lib/services/front/opportunity-action.service";
+import opportunityService from "@/lib/services/front/opportunity.service";
+import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
+import { OpportunityForm } from "@/components/opportunities/OpportunityForm";
 import { ActionDocumentPicker } from "@/components/documents/ActionDocumentPicker";
 
 const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
@@ -95,6 +98,8 @@ export function StandaloneActionForm({
   const [allContacts, setAllContacts] = useState<ContactDTO[]>([]);
   const [contactsByCompany, setContactsByCompany] = useState<ContactDTO[]>([]);
   const [channelTypes, setChannelTypes] = useState<ChannelTypeDTO[]>([]);
+  const [opportunities, setOpportunities] = useState<WorkOpportunityDTO[]>([]);
+  const [showOpportunityModal, setShowOpportunityModal] = useState(false);
   const [form, setForm] = useState({
     type: "OUTBOUND_CONTACT" as OpportunityActionType,
     occurredAt: new Date().toISOString().slice(0, 16),
@@ -102,6 +107,7 @@ export function StandaloneActionForm({
     channelTypeCode: "",
     contactId: "" as string,
     companyId: "" as string,
+    workOpportunityId: "" as string,
     participantContactIds: [] as string[],
   });
 
@@ -110,6 +116,7 @@ export function StandaloneActionForm({
       fetchCompanies().then(setCompanies);
       fetchAllContacts().then(setAllContacts);
       fetchChannelTypes().then(setChannelTypes);
+      opportunityService.listAll().then(setOpportunities).catch(() => {});
       if (initialData) {
         const d = new Date(initialData.occurredAt);
         const pad = (n: number) => String(n).padStart(2, "0");
@@ -121,6 +128,7 @@ export function StandaloneActionForm({
           channelTypeCode: initialData.channelTypeCode ?? "",
           contactId: initialData.contactId ?? "",
           companyId: initialData.companyId ?? "",
+          workOpportunityId: initialData.workOpportunityId ?? "",
           participantContactIds:
             initialData.participants?.map((p) => p.contactId) ?? [],
         });
@@ -129,6 +137,7 @@ export function StandaloneActionForm({
           ...f,
           contactId: defaultContactId,
           companyId: defaultCompanyId ?? f.companyId,
+          workOpportunityId: defaultWorkOpportunityId ?? "",
           participantContactIds: [defaultContactId],
         }));
       } else {
@@ -136,11 +145,12 @@ export function StandaloneActionForm({
           ...f,
           contactId: "",
           companyId: "",
+          workOpportunityId: defaultWorkOpportunityId ?? "",
           participantContactIds: [],
         }));
       }
     }
-  }, [open, defaultContactId, defaultCompanyId, initialData]);
+  }, [open, defaultContactId, defaultCompanyId, defaultWorkOpportunityId, initialData]);
 
   useEffect(() => {
     if (open && form.companyId) {
@@ -162,7 +172,7 @@ export function StandaloneActionForm({
         channelTypeCode: form.channelTypeCode || undefined,
         contactId: form.contactId || undefined,
         companyId: form.companyId || undefined,
-        workOpportunityId: defaultWorkOpportunityId || undefined,
+        workOpportunityId: form.workOpportunityId || undefined,
         participantContactIds:
           form.participantContactIds.length > 0 ? form.participantContactIds : undefined,
       };
@@ -179,6 +189,7 @@ export function StandaloneActionForm({
         channelTypeCode: "",
         contactId: "",
         companyId: "",
+        workOpportunityId: "",
         participantContactIds: [],
       });
       onClose();
@@ -201,6 +212,12 @@ export function StandaloneActionForm({
     });
   };
 
+  function handleOpportunityCreated(opp: WorkOpportunityDTO) {
+    setOpportunities((prev) => [opp, ...prev]);
+    setForm((f) => ({ ...f, workOpportunityId: opp.id }));
+    setShowOpportunityModal(false);
+  }
+
   const onContactSelect = (contactId: string) => {
     const contact = allContacts.find((c) => c.id === contactId);
     setForm((f) => ({
@@ -217,137 +234,172 @@ export function StandaloneActionForm({
 
   return (
     <Modal open={open} title={modalTitle} onClose={onClose}>
-      <form className="space-y-4" onSubmit={submit}>
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Avec quel contact ? (action entre vous et un contact)</label>
-          <select
-            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-            value={form.contactId}
-            onChange={(e) => onContactSelect(e.target.value)}
-          >
-            <option value="">Aucun</option>
-            {allContacts.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.firstName} {c.lastName}
-                {c.company?.name ? ` — ${c.company.name}` : ""}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Type</label>
-          <select
-            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-            value={form.type}
-            onChange={(e) => setForm({ ...form, type: e.target.value as OpportunityActionType })}
-            required
-          >
-            {ACTION_TYPES.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Date et heure</label>
-          <input
-            type="datetime-local"
-            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-            value={form.occurredAt}
-            onChange={(e) => setForm({ ...form, occurredAt: e.target.value })}
-            required
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Entreprise (optionnel)</label>
-          <select
-            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-            value={form.companyId}
-            onChange={(e) => setForm({ ...form, companyId: e.target.value })}
-          >
-            <option value="">Aucune</option>
-            {companies.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {contactsByCompany.length > 0 && (
+      <>
+        <form className="space-y-4" onSubmit={submit}>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Autres participants (optionnel)</label>
-            <div className="max-h-32 space-y-1 overflow-y-auto rounded border border-neutral-300 p-2 dark:border-neutral-700">
-              {contactsByCompany.map((contact) => (
-                <label key={contact.id} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={form.participantContactIds.includes(contact.id)}
-                    onChange={() => toggleParticipant(contact.id)}
-                  />
-                  <span>
-                    {contact.firstName} {contact.lastName}
-                  </span>
-                </label>
+            <label className="text-sm font-medium">Avec quel contact ? (action entre vous et un contact)</label>
+            <select
+              className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              value={form.contactId}
+              onChange={(e) => onContactSelect(e.target.value)}
+            >
+              <option value="">Aucun</option>
+              {allContacts.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.firstName} {c.lastName}
+                  {c.company?.name ? ` — ${c.company.name}` : ""}
+                </option>
               ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">Opportunité (optionnel)</label>
+              <button
+                type="button"
+                onClick={() => setShowOpportunityModal(true)}
+                className="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+              >
+                + Créer
+              </button>
             </div>
+            <select
+              className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              value={form.workOpportunityId}
+              onChange={(e) => setForm({ ...form, workOpportunityId: e.target.value })}
+            >
+              <option value="">Aucune</option>
+              {opportunities.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.title}{o.company?.name ? ` — ${o.company.name}` : ""}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Type de canal (optionnel)</label>
-          <select
-            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-            value={form.channelTypeCode}
-            onChange={(e) => setForm({ ...form, channelTypeCode: e.target.value })}
-          >
-            <option value="">Aucun</option>
-            {channelTypes.map((channelType) => (
-              <option key={channelType.code} value={channelType.code}>
-                {channelType.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Notes (optionnel)</label>
-          <textarea
-            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            rows={3}
-          />
-        </div>
-
-        {editActionId && (
-          <div className="border-t border-neutral-200 pt-4 dark:border-neutral-700">
-            <h3 className="mb-2 text-sm font-medium">Documents liés</h3>
-            <ActionDocumentPicker actionId={editActionId} />
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Type</label>
+            <select
+              className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value as OpportunityActionType })}
+              required
+            >
+              {ACTION_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
 
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
-          >
-            Annuler
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50"
-          >
-            {loading ? "En cours..." : isEdit ? "Enregistrer" : "Créer"}
-          </button>
-        </div>
-      </form>
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Date et heure</label>
+            <input
+              type="datetime-local"
+              className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              value={form.occurredAt}
+              onChange={(e) => setForm({ ...form, occurredAt: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Entreprise (optionnel)</label>
+            <select
+              className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              value={form.companyId}
+              onChange={(e) => setForm({ ...form, companyId: e.target.value })}
+            >
+              <option value="">Aucune</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {contactsByCompany.length > 0 && (
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Autres participants (optionnel)</label>
+              <div className="max-h-32 space-y-1 overflow-y-auto rounded border border-neutral-300 p-2 dark:border-neutral-700">
+                {contactsByCompany.map((contact) => (
+                  <label key={contact.id} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={form.participantContactIds.includes(contact.id)}
+                      onChange={() => toggleParticipant(contact.id)}
+                    />
+                    <span>
+                      {contact.firstName} {contact.lastName}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Type de canal (optionnel)</label>
+            <select
+              className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              value={form.channelTypeCode}
+              onChange={(e) => setForm({ ...form, channelTypeCode: e.target.value })}
+            >
+              <option value="">Aucun</option>
+              {channelTypes.map((channelType) => (
+                <option key={channelType.code} value={channelType.code}>
+                  {channelType.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Notes (optionnel)</label>
+            <textarea
+              className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              rows={3}
+            />
+          </div>
+
+          {editActionId && (
+            <div className="border-t border-neutral-200 pt-4 dark:border-neutral-700">
+              <h3 className="mb-2 text-sm font-medium">Documents liés</h3>
+              <ActionDocumentPicker actionId={editActionId} />
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {loading ? "En cours..." : isEdit ? "Enregistrer" : "Créer"}
+            </button>
+          </div>
+        </form>
+
+        <Modal
+          open={showOpportunityModal}
+          title="Nouvelle opportunité"
+          onClose={() => setShowOpportunityModal(false)}
+        >
+          <OpportunityForm onSuccess={handleOpportunityCreated} />
+        </Modal>
+      </>
     </Modal>
   );
 }
