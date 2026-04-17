@@ -29,8 +29,7 @@ export function DocumentUploadForm({ onSuccess, onCancel }: Props) {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
     if (!file || !title.trim()) return;
 
     const formData = new FormData();
@@ -59,7 +58,7 @@ export function DocumentUploadForm({ onSuccess, onCancel }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-4">
       <div>
         <label className="mb-1 block text-sm font-medium">
           Titre <span className="text-red-500">*</span>
@@ -115,13 +114,14 @@ export function DocumentUploadForm({ onSuccess, onCancel }: Props) {
           </button>
         )}
         <button
-          type="submit"
+          type="button"
+          onClick={handleSubmit}
           disabled={uploading || !file || !title.trim()}
           className="rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
         >
           {uploading ? "Upload en cours…" : "Uploader"}
         </button>
       </div>
-    </form>
+    </div>
   );
 }
