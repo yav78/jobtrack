@@ -5,11 +5,12 @@ import { pushToast } from "@/components/common/Toast";
 import { Modal } from "@/components/common/Modal";
 import { CompanyForm } from "@/components/companies/CompanyForm";
 import type { CompanyDTO } from "@/lib/dto/company";
+import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
 import companyService from "@/lib/services/front/company.service";
 import opportunityService from "@/lib/services/front/opportunity.service";
 
 type Props = {
-  onSuccess?: () => void;
+  onSuccess?: (opportunity: WorkOpportunityDTO) => void;
 };
 
 export function OpportunityForm({ onSuccess }: Props) {
@@ -36,7 +37,7 @@ export function OpportunityForm({ onSuccess }: Props) {
     e.preventDefault();
     setLoading(true);
     try {
-      await opportunityService.create({
+      const created = await opportunityService.create<WorkOpportunityDTO>({
         title: form.title,
         description: form.description || undefined,
         sourceUrl: form.sourceUrl || undefined,
@@ -44,7 +45,7 @@ export function OpportunityForm({ onSuccess }: Props) {
       });
       pushToast({ type: "success", title: "Opportunité créée" });
       setForm({ title: "", description: "", sourceUrl: "", companyId: "" });
-      onSuccess?.();
+      onSuccess?.(created);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       pushToast({ type: "error", title: "Erreur opportunité", description: message });
