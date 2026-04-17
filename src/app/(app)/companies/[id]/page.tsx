@@ -172,7 +172,7 @@ export default function CompanyDetail() {
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Modifier l'entreprise</h3>
+              <h3 className="text-sm font-semibold">Modifier l&apos;entreprise</h3>
               <CompanyEditForm
                 company={company}
                 onSuccess={(updatedCompany: CompanyDTO) => {
