@@ -57,7 +57,7 @@ export async function PATCH(
 
     if (validatedData.contactId !== undefined && validatedData.contactId !== null) {
       const contact = await prisma.contact.findFirst({
-        where: { id: validatedData.contactId, company: { userId } },
+        where: { id: validatedData.contactId, userId },
       });
       if (!contact) {
         return handleRouteError(new Error("Contact not found"));
@@ -68,7 +68,7 @@ export async function PATCH(
       const contacts = await prisma.contact.findMany({
         where: {
           id: { in: validatedData.participantContactIds },
-          company: { userId },
+          userId,
         },
       });
       if (contacts.length !== validatedData.participantContactIds.length) {

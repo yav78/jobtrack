@@ -144,7 +144,7 @@ export async function POST(req: Request) {
 
     if (validatedData.contactId) {
       const contact = await prisma.contact.findFirst({
-        where: { id: validatedData.contactId, company: { userId } },
+        where: { id: validatedData.contactId, userId },
       });
       if (!contact) {
         return handleRouteError(new Error("Contact not found"));
@@ -155,7 +155,7 @@ export async function POST(req: Request) {
       const channel = await prisma.contactChannel.findFirst({
         where: {
           id: validatedData.contactChannelId,
-          contact: { company: { userId } },
+          contact: { userId },
         },
       });
       if (!channel) {
@@ -167,7 +167,7 @@ export async function POST(req: Request) {
       const contacts = await prisma.contact.findMany({
         where: {
           id: { in: validatedData.participantContactIds },
-          company: { userId },
+          userId,
         },
       });
       if (contacts.length !== validatedData.participantContactIds.length) {

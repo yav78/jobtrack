@@ -115,7 +115,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const contacts = await prisma.contact.findMany({
         where: {
           id: { in: validatedData.participantContactIds },
-          company: { userId },
+          userId,
         },
       });
       if (contacts.length !== validatedData.participantContactIds.length) {
