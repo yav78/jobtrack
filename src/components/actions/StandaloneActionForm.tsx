@@ -122,6 +122,8 @@ export function StandaloneActionForm({
 
   useEffect(() => {
     if (open) {
+      setPendingDocuments([]);
+      setShowUploadForm(false);
       fetchCompanies().then(setCompanies);
       fetchAllContacts().then(setAllContacts);
       fetchChannelTypes().then(setChannelTypes);
@@ -190,6 +192,7 @@ export function StandaloneActionForm({
           ? await opportunityActionService.updateStandalone(editActionId, payload)
           : await opportunityActionService.createStandalone(payload);
 
+      let allLinksFailed = false;
       if (!isEdit && pendingDocuments.length > 0) {
         const failed: string[] = [];
         for (const doc of pendingDocuments) {
@@ -206,9 +209,12 @@ export function StandaloneActionForm({
             description: failed.join(", "),
           });
         }
+        allLinksFailed = failed.length === pendingDocuments.length;
       }
 
-      pushToast({ type: "success", title: isEdit ? "Action modifiée" : "Action créée" });
+      if (!allLinksFailed) {
+        pushToast({ type: "success", title: isEdit ? "Action modifiée" : "Action créée" });
+      }
       onSuccess?.(data);
       setForm({
         type: "OUTBOUND_CONTACT",
