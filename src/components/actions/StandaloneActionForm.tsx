@@ -17,6 +17,7 @@ import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
 import { OpportunityForm } from "@/components/opportunities/OpportunityForm";
 import { ActionDocumentPicker } from "@/components/documents/ActionDocumentPicker";
 import { ContactForm } from "@/components/contacts/ContactForm";
+import { CompanyQuickCreateModal } from "@/components/companies/CompanyQuickCreateModal";
 
 const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
   { value: "INTERVIEW", label: "Entretien" },
@@ -102,6 +103,7 @@ export function StandaloneActionForm({
   const [opportunities, setOpportunities] = useState<WorkOpportunityDTO[]>([]);
   const [showOpportunityModal, setShowOpportunityModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [form, setForm] = useState({
     type: "OUTBOUND_CONTACT" as OpportunityActionType,
     occurredAt: new Date().toISOString().slice(0, 16),
@@ -214,6 +216,18 @@ export function StandaloneActionForm({
     });
   };
 
+  const onContactSelect = (contactId: string) => {
+    const contact = allContacts.find((c) => c.id === contactId);
+    setForm((f) => ({
+      ...f,
+      contactId,
+      companyId: contact?.companyId ?? f.companyId,
+      participantContactIds: contactId
+        ? [contactId, ...f.participantContactIds.filter((id) => id !== contactId)]
+        : [],
+    }));
+  };
+
   function handleOpportunityCreated(opp: WorkOpportunityDTO) {
     setOpportunities((prev) => [opp, ...prev]);
     setForm((f) => ({ ...f, workOpportunityId: opp.id }));
@@ -226,17 +240,10 @@ export function StandaloneActionForm({
     setShowContactModal(false);
   }
 
-  const onContactSelect = (contactId: string) => {
-    const contact = allContacts.find((c) => c.id === contactId);
-    setForm((f) => ({
-      ...f,
-      contactId,
-      companyId: contact?.companyId ?? f.companyId,
-      participantContactIds: contactId
-        ? [contactId, ...f.participantContactIds.filter((id) => id !== contactId)]
-        : [],
-    }));
-  };
+  function handleCompanyCreated(company: { id: string; name: string }) {
+    setCompanies((prev) => [...prev, company]);
+    setForm((f) => ({ ...f, companyId: company.id }));
+  }
 
   const modalTitle = isEdit ? "Modifier l'action" : "Nouvelle action (prise de contact)";
 
@@ -323,7 +330,16 @@ export function StandaloneActionForm({
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-medium">Entreprise (optionnel)</label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">Entreprise (optionnel)</label>
+              <button
+                type="button"
+                onClick={() => setShowCompanyModal(true)}
+                className="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+              >
+                + Créer
+              </button>
+            </div>
             <select
               className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
               value={form.companyId}
@@ -423,6 +439,11 @@ export function StandaloneActionForm({
         >
           <ContactForm onSuccess={handleContactCreated} />
         </Modal>
+        <CompanyQuickCreateModal
+          open={showCompanyModal}
+          onClose={() => setShowCompanyModal(false)}
+          onSuccess={handleCompanyCreated}
+        />
       </>
     </Modal>
   );
