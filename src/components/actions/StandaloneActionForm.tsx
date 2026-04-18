@@ -16,6 +16,7 @@ import opportunityService from "@/lib/services/front/opportunity.service";
 import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
 import { OpportunityForm } from "@/components/opportunities/OpportunityForm";
 import { ActionDocumentPicker } from "@/components/documents/ActionDocumentPicker";
+import { ContactForm } from "@/components/contacts/ContactForm";
 
 const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
   { value: "INTERVIEW", label: "Entretien" },
@@ -100,6 +101,7 @@ export function StandaloneActionForm({
   const [channelTypes, setChannelTypes] = useState<ChannelTypeDTO[]>([]);
   const [opportunities, setOpportunities] = useState<WorkOpportunityDTO[]>([]);
   const [showOpportunityModal, setShowOpportunityModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
   const [form, setForm] = useState({
     type: "OUTBOUND_CONTACT" as OpportunityActionType,
     occurredAt: new Date().toISOString().slice(0, 16),
@@ -218,6 +220,12 @@ export function StandaloneActionForm({
     setShowOpportunityModal(false);
   }
 
+  function handleContactCreated(contact: ContactDTO) {
+    setAllContacts((prev) => [contact, ...prev]);
+    onContactSelect(contact.id);
+    setShowContactModal(false);
+  }
+
   const onContactSelect = (contactId: string) => {
     const contact = allContacts.find((c) => c.id === contactId);
     setForm((f) => ({
@@ -237,7 +245,16 @@ export function StandaloneActionForm({
       <>
         <form className="space-y-4" onSubmit={submit}>
           <div className="space-y-1">
-            <label className="text-sm font-medium">Avec quel contact ? (action entre vous et un contact)</label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">Avec quel contact ? (action entre vous et un contact)</label>
+              <button
+                type="button"
+                onClick={() => setShowContactModal(true)}
+                className="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+              >
+                + Créer
+              </button>
+            </div>
             <select
               className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
               value={form.contactId}
@@ -398,6 +415,13 @@ export function StandaloneActionForm({
           onClose={() => setShowOpportunityModal(false)}
         >
           <OpportunityForm onSuccess={handleOpportunityCreated} />
+        </Modal>
+        <Modal
+          open={showContactModal}
+          title="Nouveau contact"
+          onClose={() => setShowContactModal(false)}
+        >
+          <ContactForm onSuccess={handleContactCreated} />
         </Modal>
       </>
     </Modal>
