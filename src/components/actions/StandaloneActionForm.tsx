@@ -18,6 +18,9 @@ import { OpportunityForm } from "@/components/opportunities/OpportunityForm";
 import { ActionDocumentPicker } from "@/components/documents/ActionDocumentPicker";
 import { ContactForm } from "@/components/contacts/ContactForm";
 import { CompanyQuickCreateModal } from "@/components/companies/CompanyQuickCreateModal";
+import { DocumentUploadForm } from "@/components/documents/DocumentUploadForm";
+import { documentService } from "@/lib/services/front/document.service";
+import type { DocumentDTO } from "@/lib/dto/document";
 
 const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
   { value: "INTERVIEW", label: "Entretien" },
@@ -104,6 +107,8 @@ export function StandaloneActionForm({
   const [showOpportunityModal, setShowOpportunityModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showCompanyModal, setShowCompanyModal] = useState(false);
+  const [pendingDocuments, setPendingDocuments] = useState<DocumentDTO[]>([]);
+  const [showUploadForm, setShowUploadForm] = useState(false);
   const [form, setForm] = useState({
     type: "OUTBOUND_CONTACT" as OpportunityActionType,
     occurredAt: new Date().toISOString().slice(0, 16),
@@ -184,6 +189,25 @@ export function StandaloneActionForm({
         isEdit && editActionId
           ? await opportunityActionService.updateStandalone(editActionId, payload)
           : await opportunityActionService.createStandalone(payload);
+
+      if (!isEdit && pendingDocuments.length > 0) {
+        const failed: string[] = [];
+        for (const doc of pendingDocuments) {
+          try {
+            await documentService.linkToAction(data.id, doc.id);
+          } catch {
+            failed.push(doc.title);
+          }
+        }
+        if (failed.length > 0) {
+          pushToast({
+            type: "error",
+            title: "Certains documents n'ont pas pu être liés",
+            description: failed.join(", "),
+          });
+        }
+      }
+
       pushToast({ type: "success", title: isEdit ? "Action modifiée" : "Action créée" });
       onSuccess?.(data);
       setForm({
@@ -196,6 +220,8 @@ export function StandaloneActionForm({
         workOpportunityId: "",
         participantContactIds: [],
       });
+      setPendingDocuments([]);
+      setShowUploadForm(false);
       onClose();
       router.refresh();
     } catch (err) {
@@ -243,6 +269,12 @@ export function StandaloneActionForm({
   function handleCompanyCreated(company: { id: string; name: string }) {
     setCompanies((prev) => [...prev, company]);
     setForm((f) => ({ ...f, companyId: company.id }));
+    setShowCompanyModal(false);
+  }
+
+  function handleDocumentUploaded(doc: DocumentDTO) {
+    setPendingDocuments((prev) => [doc, ...prev]);
+    setShowUploadForm(false);
   }
 
   const modalTitle = isEdit ? "Modifier l'action" : "Nouvelle action (prise de contact)";
@@ -404,6 +436,50 @@ export function StandaloneActionForm({
             <div className="border-t border-neutral-200 pt-4 dark:border-neutral-700">
               <h3 className="mb-2 text-sm font-medium">Documents liés</h3>
               <ActionDocumentPicker actionId={editActionId} />
+            </div>
+          )}
+
+          {!editActionId && (
+            <div className="border-t border-neutral-200 pt-4 dark:border-neutral-700">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-medium">Documents (optionnel)</h3>
+                {!showUploadForm && (
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadForm(true)}
+                    className="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                  >
+                    + Ajouter un document
+                  </button>
+                )}
+              </div>
+
+              {pendingDocuments.length > 0 && (
+                <div className="mb-2 divide-y divide-neutral-100 rounded border border-neutral-200 dark:divide-neutral-700 dark:border-neutral-700">
+                  {pendingDocuments.map((doc) => (
+                    <div key={doc.id} className="flex items-center gap-2 px-3 py-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{doc.title}</p>
+                        <p className="truncate text-xs text-neutral-400">{doc.originalName}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPendingDocuments((prev) => prev.filter((d) => d.id !== doc.id))}
+                        className="shrink-0 rounded px-2 py-1 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      >
+                        Retirer
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {showUploadForm && (
+                <DocumentUploadForm
+                  onSuccess={handleDocumentUploaded}
+                  onCancel={() => setShowUploadForm(false)}
+                />
+              )}
             </div>
           )}
 
