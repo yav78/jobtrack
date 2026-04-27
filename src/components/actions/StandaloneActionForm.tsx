@@ -181,9 +181,9 @@ export function StandaloneActionForm({
         occurredAt: new Date(form.occurredAt).toISOString(),
         notes: form.notes || undefined,
         channelTypeCode: form.channelTypeCode || undefined,
-        contactId: form.contactId || undefined,
-        companyId: form.companyId || undefined,
-        workOpportunityId: form.workOpportunityId || undefined,
+        contactId: form.contactId || null,
+        companyId: form.companyId || null,
+        workOpportunityId: form.workOpportunityId || null,
         participantContactIds:
           form.participantContactIds.length > 0 ? form.participantContactIds : undefined,
       };

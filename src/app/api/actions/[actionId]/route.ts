@@ -76,12 +76,7 @@ export async function PATCH(
       }
     }
 
-    await updateOpportunityAction(actionId, userId, {
-      ...validatedData,
-      workOpportunityId: validatedData.workOpportunityId ?? undefined,
-      companyId: validatedData.companyId ?? undefined,
-      contactId: validatedData.contactId ?? undefined,
-    });
+    await updateOpportunityAction(actionId, userId, validatedData);
 
     const updated = await getOpportunityActionById(actionId, userId);
     if (!updated) {

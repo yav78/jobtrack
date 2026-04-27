@@ -524,9 +524,9 @@ export async function updateOpportunityAction(
   const updateData: Prisma.OpportunityActionUncheckedUpdateInput = {
     ...restActionData,
     ...(metadata !== undefined ? { metadata: metadata as Prisma.InputJsonValue } : {}),
-    ...(workOpportunityId !== undefined ? { workOpportunityId: workOpportunityId ?? undefined } : {}),
-    ...(companyId !== undefined ? { companyId: companyId ?? undefined } : {}),
-    ...(contactId !== undefined ? { contactId: contactId ?? undefined } : {}),
+    ...(workOpportunityId !== undefined ? { workOpportunityId } : {}),
+    ...(companyId !== undefined ? { companyId } : {}),
+    ...(contactId !== undefined ? { contactId } : {}),
   };
   const updated = await prisma.opportunityAction.update({
     where: { id: actionId },
