@@ -21,6 +21,7 @@ import { CompanyQuickCreateModal } from "@/components/companies/CompanyQuickCrea
 import { DocumentUploadForm } from "@/components/documents/DocumentUploadForm";
 import { documentService } from "@/lib/services/front/document.service";
 import type { DocumentDTO } from "@/lib/dto/document";
+import { addPendingDocument, removePendingDocument } from "./pending-documents";
 
 const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
   { value: "INTERVIEW", label: "Entretien" },
@@ -108,7 +109,10 @@ export function StandaloneActionForm({
   const [showContactModal, setShowContactModal] = useState(false);
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [pendingDocuments, setPendingDocuments] = useState<DocumentDTO[]>([]);
+  const [documentLibrary, setDocumentLibrary] = useState<DocumentDTO[]>([]);
+  const [showDocumentPicker, setShowDocumentPicker] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [documentSearch, setDocumentSearch] = useState("");
   const [form, setForm] = useState({
     type: "OUTBOUND_CONTACT" as OpportunityActionType,
     occurredAt: new Date().toISOString().slice(0, 16),
@@ -123,11 +127,22 @@ export function StandaloneActionForm({
   useEffect(() => {
     if (open) {
       setPendingDocuments([]);
+      setDocumentLibrary([]);
+      setShowDocumentPicker(false);
       setShowUploadForm(false);
+      setDocumentSearch("");
       fetchCompanies().then(setCompanies);
       fetchAllContacts().then(setAllContacts);
       fetchChannelTypes().then(setChannelTypes);
       opportunityService.listAll().then(setOpportunities).catch(() => {});
+      if (!isEdit) {
+        documentService
+          .list()
+          .then(setDocumentLibrary)
+          .catch(() =>
+            pushToast({ type: "error", title: "Erreur lors du chargement des documents" })
+          );
+      }
       if (initialData) {
         const d = new Date(initialData.occurredAt);
         const pad = (n: number) => String(n).padStart(2, "0");
@@ -161,7 +176,7 @@ export function StandaloneActionForm({
         }));
       }
     }
-  }, [open, defaultContactId, defaultCompanyId, defaultWorkOpportunityId, initialData]);
+  }, [open, defaultContactId, defaultCompanyId, defaultWorkOpportunityId, initialData, isEdit]);
 
   useEffect(() => {
     if (open && form.companyId) {
@@ -227,7 +242,9 @@ export function StandaloneActionForm({
         participantContactIds: [],
       });
       setPendingDocuments([]);
+      setShowDocumentPicker(false);
       setShowUploadForm(false);
+      setDocumentSearch("");
       onClose();
       router.refresh();
     } catch (err) {
@@ -279,11 +296,28 @@ export function StandaloneActionForm({
   }
 
   function handleDocumentUploaded(doc: DocumentDTO) {
-    setPendingDocuments((prev) => [doc, ...prev]);
+    setDocumentLibrary((prev) => addPendingDocument(prev, doc));
+    setPendingDocuments((prev) => addPendingDocument(prev, doc));
     setShowUploadForm(false);
   }
 
+  function handleExistingDocumentSelected(documentId: string) {
+    const document = documentLibrary.find((item) => item.id === documentId);
+    if (!document) return;
+    setPendingDocuments((prev) => addPendingDocument(prev, document));
+    setShowDocumentPicker(false);
+    setDocumentSearch("");
+  }
+
   const modalTitle = isEdit ? "Modifier l'action" : "Nouvelle action (prise de contact)";
+  const pendingDocumentIds = new Set(pendingDocuments.map((document) => document.id));
+  const availableDocuments = documentLibrary.filter(
+    (document) =>
+      !pendingDocumentIds.has(document.id) &&
+      (documentSearch.trim() === "" ||
+        document.title.toLowerCase().includes(documentSearch.trim().toLowerCase()) ||
+        document.originalName.toLowerCase().includes(documentSearch.trim().toLowerCase()))
+  );
 
   return (
     <Modal open={open} title={modalTitle} onClose={onClose}>
@@ -447,18 +481,98 @@ export function StandaloneActionForm({
 
           {!editActionId && (
             <div className="border-t border-neutral-200 pt-4 dark:border-neutral-700">
-              <div className="mb-2 flex items-center justify-between">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-medium">Documents (optionnel)</h3>
-                {!showUploadForm && (
-                  <button
-                    type="button"
-                    onClick={() => setShowUploadForm(true)}
-                    className="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
-                  >
-                    + Ajouter un document
-                  </button>
+                {!showDocumentPicker && !showUploadForm && (
+                  <div className="flex flex-wrap justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowDocumentPicker(true)}
+                      className="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                    >
+                      + Lier un document existant
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowUploadForm(true)}
+                      className="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                    >
+                      + Uploader un document
+                    </button>
+                  </div>
                 )}
               </div>
+
+              {showDocumentPicker && (
+                <div className="mb-3 rounded border border-neutral-200 p-3 dark:border-neutral-700">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-medium">Choisir dans la bibliothèque</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDocumentPicker(false);
+                        setDocumentSearch("");
+                      }}
+                      className="text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                    >
+                      Fermer
+                    </button>
+                  </div>
+                  <input
+                    type="search"
+                    placeholder="Rechercher un CV ou document…"
+                    value={documentSearch}
+                    onChange={(e) => setDocumentSearch(e.target.value)}
+                    className="mb-2 w-full rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+                  />
+                  {availableDocuments.length === 0 ? (
+                    <p className="py-3 text-center text-sm text-neutral-400">
+                      {documentLibrary.filter((document) => !pendingDocumentIds.has(document.id))
+                        .length === 0
+                        ? "Tous les documents sont déjà sélectionnés."
+                        : "Aucun résultat."}
+                    </p>
+                  ) : (
+                    <div className="max-h-48 divide-y divide-neutral-100 overflow-y-auto dark:divide-neutral-700">
+                      {availableDocuments.map((document) => (
+                        <div key={document.id} className="flex items-center gap-2 py-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm">{document.title}</p>
+                            <p className="truncate text-xs text-neutral-400">
+                              {document.originalName}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleExistingDocumentSelected(document.id)}
+                            className="shrink-0 rounded bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
+                          >
+                            Lier
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!showDocumentPicker && !showUploadForm && pendingDocuments.length === 0 && (
+                <p className="mb-2 text-sm text-neutral-400 dark:text-neutral-500">
+                  Aucun document sélectionné.
+                </p>
+              )}
+
+              {!showDocumentPicker && showUploadForm && (
+                <div className="mb-3 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadForm(false)}
+                    className="text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                  >
+                    Fermer
+                  </button>
+                </div>
+              )}
 
               {pendingDocuments.length > 0 && (
                 <div className="mb-2 divide-y divide-neutral-100 rounded border border-neutral-200 dark:divide-neutral-700 dark:border-neutral-700">
@@ -470,7 +584,9 @@ export function StandaloneActionForm({
                       </div>
                       <button
                         type="button"
-                        onClick={() => setPendingDocuments((prev) => prev.filter((d) => d.id !== doc.id))}
+                        onClick={() =>
+                          setPendingDocuments((prev) => removePendingDocument(prev, doc.id))
+                        }
                         className="shrink-0 rounded px-2 py-1 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                       >
                         Retirer
