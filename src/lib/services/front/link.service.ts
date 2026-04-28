@@ -7,7 +7,7 @@ export type LinkListFilters = {
   page?: number;
   pageSize?: number;
   q?: string;
-  category?: LinkCategoryFilter;
+  category?: LinkCategoryFilter | LinkCategoryFilter[];
 };
 
 function buildListUrl(filters?: LinkListFilters): string {
@@ -16,7 +16,13 @@ function buildListUrl(filters?: LinkListFilters): string {
   if (filters.page != null) params.set("page", String(filters.page));
   if (filters.pageSize != null) params.set("pageSize", String(filters.pageSize));
   if (filters.q?.trim()) params.set("q", filters.q.trim());
-  if (filters.category) params.set("category", filters.category);
+  if (filters.category) {
+    if (Array.isArray(filters.category)) {
+      filters.category.forEach((category) => params.append("category", category));
+    } else {
+      params.set("category", filters.category);
+    }
+  }
   const qs = params.toString();
   return qs ? `/api/links?${qs}` : "/api/links";
 }

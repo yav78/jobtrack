@@ -10,7 +10,11 @@ export default async function LinksPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const listRaw = await getLinks(session.user.id, { page: 1, pageSize: 20 });
+  const listRaw = await getLinks(session.user.id, {
+    page: 1,
+    pageSize: 20,
+    category: ["TOOL", "NETWORK", "OTHER"],
+  });
   const initialList = serializeLinkListFromDb(listRaw);
 
   return <LinksPageClient initialList={initialList} />;

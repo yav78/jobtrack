@@ -10,7 +10,6 @@ const PAGE_SIZE = 20;
 
 const CATEGORY_OPTIONS = [
   { value: "ALL" as const, label: "Toutes" },
-  { value: "JOBBOARD" as const, label: "Jobboards" },
   { value: "TOOL" as const, label: "Outils" },
   { value: "NETWORK" as const, label: "Réseaux" },
   { value: "OTHER" as const, label: "Autres" },
@@ -79,7 +78,10 @@ export default function LinksPageClient({ initialList }: Props) {
         page,
         pageSize: PAGE_SIZE,
         q: debouncedQ || undefined,
-        category: category === "ALL" ? undefined : (category as LinkCategoryFilter),
+        category:
+          category === "ALL"
+            ? (["TOOL", "NETWORK", "OTHER"] as LinkCategoryFilter[])
+            : (category as LinkCategoryFilter),
       });
       setList(data);
     } catch (err) {

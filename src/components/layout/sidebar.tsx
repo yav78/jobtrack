@@ -9,6 +9,7 @@ const navItems = [
   { href: "/companies", label: "Entreprises" },
   { href: "/contacts", label: "Contacts" },
   { href: "/opportunities", label: "Opportunités" },
+  { href: "/jobboards", label: "Jobboards" },
   { href: "/links", label: "Liens" },
   { href: "/actions", label: "Actions" },
   { href: "/documents", label: "Documents" },
