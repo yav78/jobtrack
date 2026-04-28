@@ -13,6 +13,7 @@ type OpportunityWithRelations = Prisma.WorkOpportunityGetPayload<{
     entretiens: {
       include: { contacts: true; contactChannel: true };
     };
+    sourceLink: { select: { id: true; title: true } };
   };
 }>;
 
@@ -36,7 +37,10 @@ export async function getOpportunities(
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: { company: { select: { id: true, name: true } } },
+      include: {
+        company: { select: { id: true, name: true } },
+        sourceLink: { select: { id: true, title: true } },
+      },
     }),
     prisma.workOpportunity.count({ where }),
   ]);
@@ -46,7 +50,10 @@ export async function getOpportunities(
 export async function getAllOpportunitiesForExport(userId: string) {
   return prisma.workOpportunity.findMany({
     where: { userId, ...ACTIVE },
-    include: { company: { select: { id: true, name: true } } },
+    include: {
+      company: { select: { id: true, name: true } },
+      sourceLink: { select: { id: true, title: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 }
@@ -57,7 +64,13 @@ export async function createOpportunity(userId: string, data: OpportunityCreateI
     const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId, ...ACTIVE } });
     if (!company) throw NotFound("Company not found");
   }
-  return prisma.workOpportunity.create({ data: { ...validatedData, userId } });
+  return prisma.workOpportunity.create({
+    data: { ...validatedData, userId },
+    include: {
+      company: { select: { id: true, name: true } },
+      sourceLink: { select: { id: true, title: true } },
+    },
+  });
 }
 
 export async function getOpportunity(id: string, userId: string): Promise<OpportunityWithRelations | null> {
@@ -69,6 +82,7 @@ export async function getOpportunity(id: string, userId: string): Promise<Opport
         include: { contacts: true, contactChannel: true },
         orderBy: { date: "desc" },
       },
+      sourceLink: { select: { id: true, title: true } },
     },
   });
   return opp ?? null;
@@ -80,7 +94,14 @@ export async function updateOpportunity(id: string, userId: string, data: Opport
     const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId, ...ACTIVE } });
     if (!company) throw NotFound("Company not found");
   }
-  return prisma.workOpportunity.update({ where: { id, userId }, data: validatedData });
+  return prisma.workOpportunity.update({
+    where: { id, userId },
+    data: validatedData,
+    include: {
+      company: { select: { id: true, name: true } },
+      sourceLink: { select: { id: true, title: true } },
+    },
+  });
 }
 
 export async function deleteOpportunity(id: string, userId: string) {
