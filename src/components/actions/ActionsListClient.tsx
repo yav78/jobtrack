@@ -215,6 +215,11 @@ export const ActionsListClient = forwardRef<ActionsListClientHandle, Props>(func
                                 {action.company.name}
                               </Link>
                             )}
+                            {action.link && (
+                              <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+                                Via : {action.link.title}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             {onEdit && (

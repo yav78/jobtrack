@@ -206,6 +206,29 @@ export default async function Home() {
             </div>
           )}
 
+          {stats.applicationsByJobboard.length > 0 && (
+            <div className="card space-y-3">
+              <div>
+                <h3 className="text-lg font-semibold">Candidatures par plateforme</h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Actions « Candidature » groupées par jobboard.
+                </p>
+              </div>
+              <div className="space-y-2">
+                {stats.applicationsByJobboard.map((item) => (
+                  <div key={item.linkId ?? "none"} className="flex items-center justify-between text-sm">
+                    <span className="text-neutral-700 dark:text-neutral-300">
+                      {item.linkTitle ?? "Sans plateforme"}
+                    </span>
+                    <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                      {item.count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Répartition des actions */}
           <div className="card space-y-3">
             <div>
