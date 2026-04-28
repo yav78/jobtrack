@@ -22,6 +22,7 @@ import { DocumentUploadForm } from "@/components/documents/DocumentUploadForm";
 import { documentService } from "@/lib/services/front/document.service";
 import type { DocumentDTO } from "@/lib/dto/document";
 import { addPendingDocument, removePendingDocument } from "./pending-documents";
+import { listJobboards } from "@/lib/services/front/jobboard.service";
 
 const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
   { value: "INTERVIEW", label: "Entretien" },
@@ -104,6 +105,7 @@ export function StandaloneActionForm({
   const [allContacts, setAllContacts] = useState<ContactDTO[]>([]);
   const [contactsByCompany, setContactsByCompany] = useState<ContactDTO[]>([]);
   const [channelTypes, setChannelTypes] = useState<ChannelTypeDTO[]>([]);
+  const [jobboards, setJobboards] = useState<Array<{ id: string; title: string }>>([]);
   const [opportunities, setOpportunities] = useState<WorkOpportunityDTO[]>([]);
   const [showOpportunityModal, setShowOpportunityModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -121,6 +123,7 @@ export function StandaloneActionForm({
     contactId: "" as string,
     companyId: "" as string,
     workOpportunityId: "" as string,
+    linkId: "" as string,
     participantContactIds: [] as string[],
   });
 
@@ -134,6 +137,7 @@ export function StandaloneActionForm({
       fetchCompanies().then(setCompanies);
       fetchAllContacts().then(setAllContacts);
       fetchChannelTypes().then(setChannelTypes);
+      listJobboards().then(setJobboards).catch(() => {});
       opportunityService.listAll().then(setOpportunities).catch(() => {});
       if (!isEdit) {
         documentService
@@ -155,6 +159,7 @@ export function StandaloneActionForm({
           contactId: initialData.contactId ?? "",
           companyId: initialData.companyId ?? "",
           workOpportunityId: initialData.workOpportunityId ?? "",
+          linkId: initialData.linkId ?? "",
           participantContactIds:
             initialData.participants?.map((p) => p.contactId) ?? [],
         });
@@ -164,6 +169,7 @@ export function StandaloneActionForm({
           contactId: defaultContactId,
           companyId: defaultCompanyId ?? f.companyId,
           workOpportunityId: defaultWorkOpportunityId ?? "",
+          linkId: "",
           participantContactIds: [defaultContactId],
         }));
       } else {
@@ -172,6 +178,7 @@ export function StandaloneActionForm({
           contactId: "",
           companyId: "",
           workOpportunityId: defaultWorkOpportunityId ?? "",
+          linkId: "",
           participantContactIds: [],
         }));
       }
@@ -201,6 +208,7 @@ export function StandaloneActionForm({
         workOpportunityId: form.workOpportunityId || null,
         participantContactIds:
           form.participantContactIds.length > 0 ? form.participantContactIds : undefined,
+        linkId: form.linkId || null,
       };
       const data =
         isEdit && editActionId
@@ -239,6 +247,7 @@ export function StandaloneActionForm({
         contactId: "",
         companyId: "",
         workOpportunityId: "",
+        linkId: "",
         participantContactIds: [],
       });
       setPendingDocuments([]);
@@ -460,6 +469,31 @@ export function StandaloneActionForm({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Via (jobboard, optionnel)</label>
+            <select
+              className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              value={form.linkId}
+              onChange={(e) => setForm({ ...form, linkId: e.target.value })}
+            >
+              <option value="">Aucun</option>
+              {jobboards.map((jb) => (
+                <option key={jb.id} value={jb.id}>
+                  {jb.title}
+                </option>
+              ))}
+            </select>
+            {jobboards.length === 0 && (
+              <a
+                href="/jobboards"
+                target="_blank"
+                className="text-xs text-emerald-600 hover:underline dark:text-emerald-400"
+              >
+                Ajouter un jobboard →
+              </a>
+            )}
           </div>
 
           <div className="space-y-1">
