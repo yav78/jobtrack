@@ -90,8 +90,55 @@ type OpportunityActionWithOpportunity = Prisma.OpportunityActionGetPayload<{
         };
       };
     };
+    link: { select: { id: true; title: true } };
   };
 }>;
+
+const ACTION_FULL_INCLUDE = {
+  contactChannel: { select: { id: true, value: true, label: true } },
+  participants: {
+    include: {
+      contact: { select: { id: true, firstName: true, lastName: true } },
+    },
+  },
+  documents: {
+    include: {
+      document: {
+        select: { id: true, title: true, originalName: true, mimeType: true, size: true },
+      },
+    },
+  },
+  workOpportunity: {
+    select: {
+      id: true,
+      title: true,
+      company: { select: { id: true, name: true } },
+    },
+  },
+  company: { select: { id: true, name: true } },
+  contact: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      company: { select: { id: true, name: true } },
+    },
+  },
+  link: { select: { id: true, title: true } },
+} as const;
+
+async function markOpportunityApplied(
+  userId: string,
+  type: OpportunityActionType,
+  workOpportunityId?: string | null
+): Promise<void> {
+  if (type !== "APPLIED" || !workOpportunityId) return;
+
+  await prisma.workOpportunity.updateMany({
+    where: { id: workOpportunityId, userId, deletedAt: null },
+    data: { status: "APPLIED" },
+  });
+}
 
 export async function getOpportunityActions(
   opportunityId: string,
@@ -147,70 +194,7 @@ export async function getRecentOpportunityActions(
 ): Promise<OpportunityActionWithOpportunity[]> {
   const actions = await prisma.opportunityAction.findMany({
     where: { userId },
-    include: {
-      contactChannel: {
-        select: {
-          id: true,
-          value: true,
-          label: true,
-        },
-      },
-      participants: {
-        include: {
-          contact: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
-      },
-      documents: {
-        include: {
-          document: {
-            select: {
-              id: true,
-              title: true,
-              originalName: true,
-              mimeType: true,
-              size: true,
-            },
-          },
-        },
-      },
-      workOpportunity: {
-        select: {
-          id: true,
-          title: true,
-          company: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-      company: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      contact: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          company: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-    },
+    include: ACTION_FULL_INCLUDE,
     orderBy: {
       occurredAt: "desc",
     },
@@ -249,70 +233,7 @@ export async function getAllActions(
 
   const actions = await prisma.opportunityAction.findMany({
     where,
-    include: {
-      contactChannel: {
-        select: {
-          id: true,
-          value: true,
-          label: true,
-        },
-      },
-      participants: {
-        include: {
-          contact: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
-      },
-      documents: {
-        include: {
-          document: {
-            select: {
-              id: true,
-              title: true,
-              originalName: true,
-              mimeType: true,
-              size: true,
-            },
-          },
-        },
-      },
-      workOpportunity: {
-        select: {
-          id: true,
-          title: true,
-          company: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-      company: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      contact: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          company: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-    },
+    include: ACTION_FULL_INCLUDE,
     orderBy: {
       occurredAt: "desc",
     },
@@ -329,79 +250,21 @@ export async function getOpportunityActionById(
 ): Promise<OpportunityActionWithOpportunity | null> {
   const found = await prisma.opportunityAction.findFirst({
     where: { id: actionId, userId },
-    include: {
-      contactChannel: {
-        select: {
-          id: true,
-          value: true,
-          label: true,
-        },
-      },
-      participants: {
-        include: {
-          contact: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
-      },
-      documents: {
-        include: {
-          document: {
-            select: {
-              id: true,
-              title: true,
-              originalName: true,
-              mimeType: true,
-              size: true,
-            },
-          },
-        },
-      },
-      workOpportunity: {
-        select: {
-          id: true,
-          title: true,
-          company: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-      company: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      contact: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          company: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-    },
+    include: ACTION_FULL_INCLUDE,
   });
   return found as OpportunityActionWithOpportunity | null;
 }
 
 export async function createOpportunityAction(
   userId: string,
-  data: OpportunityActionCreateInput & { workOpportunityId?: string; companyId?: string; contactId?: string }
+  data: OpportunityActionCreateInput & {
+    workOpportunityId?: string | null;
+    companyId?: string | null;
+    contactId?: string | null;
+  }
 ): Promise<OpportunityActionWithOpportunity> {
-  const { participantContactIds, workOpportunityId, companyId, contactId, ...actionData } = data;
+  const { participantContactIds, workOpportunityId, companyId, contactId, linkId, ...actionData } =
+    data;
 
   const { metadata, ...restActionData } = actionData;
   const action = await prisma.opportunityAction.create({
@@ -412,76 +275,16 @@ export async function createOpportunityAction(
       workOpportunityId: workOpportunityId ?? undefined,
       companyId: companyId ?? undefined,
       contactId: contactId ?? undefined,
+      linkId: linkId ?? undefined,
       participants:
         participantContactIds && participantContactIds.length > 0
           ? { create: participantContactIds.map((id) => ({ contactId: id })) }
           : undefined,
     } as Prisma.OpportunityActionUncheckedCreateInput,
-    include: {
-      contactChannel: {
-        select: {
-          id: true,
-          value: true,
-          label: true,
-        },
-      },
-      participants: {
-        include: {
-          contact: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
-      },
-      documents: {
-        include: {
-          document: {
-            select: {
-              id: true,
-              title: true,
-              originalName: true,
-              mimeType: true,
-              size: true,
-            },
-          },
-        },
-      },
-      workOpportunity: {
-        select: {
-          id: true,
-          title: true,
-          company: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-      company: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      contact: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          company: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-    },
+    include: ACTION_FULL_INCLUDE,
   });
+
+  await markOpportunityApplied(userId, data.type, workOpportunityId);
 
   return action as OpportunityActionWithOpportunity;
 }
@@ -520,13 +323,15 @@ export async function updateOpportunityAction(
     }
   }
 
-  const { metadata, workOpportunityId, companyId, contactId, ...restActionData } = actionData;
+  const { metadata, workOpportunityId, companyId, contactId, linkId, ...restActionData } =
+    actionData;
   const updateData: Prisma.OpportunityActionUncheckedUpdateInput = {
     ...restActionData,
     ...(metadata !== undefined ? { metadata: metadata as Prisma.InputJsonValue } : {}),
     ...(workOpportunityId !== undefined ? { workOpportunityId } : {}),
     ...(companyId !== undefined ? { companyId } : {}),
     ...(contactId !== undefined ? { contactId } : {}),
+    ...(linkId !== undefined ? { linkId } : {}),
   };
   const updated = await prisma.opportunityAction.update({
     where: { id: actionId },
@@ -553,6 +358,11 @@ export async function updateOpportunityAction(
     },
   });
 
+  const finalType = actionData.type ?? existing.type;
+  const finalWorkOpportunityId =
+    workOpportunityId !== undefined ? workOpportunityId : existing.workOpportunityId;
+  await markOpportunityApplied(userId, finalType, finalWorkOpportunityId);
+
   return updated;
 }
 
@@ -568,4 +378,36 @@ export async function deleteOpportunityAction(actionId: string, userId: string) 
   await prisma.opportunityAction.delete({
     where: { id: actionId },
   });
+}
+
+export type JobboardStat = {
+  linkId: string | null;
+  linkTitle: string | null;
+  count: number;
+};
+
+export async function getApplicationsByJobboard(userId: string): Promise<JobboardStat[]> {
+  const groups = await prisma.opportunityAction.groupBy({
+    by: ["linkId"],
+    _count: { _all: true },
+    where: { userId, type: "APPLIED" },
+  });
+
+  const linkIds = groups.map((g) => g.linkId).filter((id): id is string => id !== null);
+
+  const links =
+    linkIds.length > 0
+      ? await prisma.link.findMany({
+          where: { id: { in: linkIds } },
+          select: { id: true, title: true },
+        })
+      : [];
+
+  const linkMap = new Map(links.map((l) => [l.id, l.title]));
+
+  return groups.map((g) => ({
+    linkId: g.linkId,
+    linkTitle: g.linkId ? (linkMap.get(g.linkId) ?? null) : null,
+    count: g._count._all,
+  }));
 }
