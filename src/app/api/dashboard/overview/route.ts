@@ -1,7 +1,10 @@
 import { handleRouteError, requireUserId } from "@/lib/api-helpers";
 import { jsonOk } from "@/lib/errors/response";
 import { prisma } from "@/lib/prisma";
-import { getRecentOpportunityActions } from "@/lib/services/back/opportunity-actions";
+import {
+  getApplicationsByJobboard,
+  getRecentOpportunityActions,
+} from "@/lib/services/back/opportunity-actions";
 import type { OpportunityActionType } from "@prisma/client";
 
 export async function GET() {
@@ -21,6 +24,7 @@ export async function GET() {
       recentActions,
       opportunitiesByStatus,
       upcomingFollowUps,
+      applicationsByJobboard,
     ] = await Promise.all([
       prisma.$transaction([
         prisma.company.count({ where: { userId, deletedAt: null } }),
@@ -52,6 +56,7 @@ export async function GET() {
         take: 10,
         select: { id: true, title: true, followUpAt: true, status: true },
       }),
+      getApplicationsByJobboard(userId),
     ]);
 
     const stats = {
@@ -76,6 +81,7 @@ export async function GET() {
         followUpAt: o.followUpAt!.toISOString(),
         isOverdue: o.followUpAt! < now,
       })),
+      applicationsByJobboard,
     };
 
     const recent = recentActions.map((action) => ({
@@ -86,6 +92,7 @@ export async function GET() {
       metadata: action.metadata as Record<string, unknown> | null,
       userId: action.userId,
       workOpportunityId: action.workOpportunityId,
+      linkId: action.linkId,
       contactChannelId: action.contactChannelId,
       createdAt: action.createdAt.toISOString(),
       updatedAt: action.updatedAt.toISOString(),
@@ -119,6 +126,7 @@ export async function GET() {
       company: action.company
         ? { id: action.company.id, name: action.company.name }
         : undefined,
+      link: action.link ? { id: action.link.id, title: action.link.title } : undefined,
     }));
 
     return jsonOk({ stats, recentActions: recent });

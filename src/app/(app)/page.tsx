@@ -15,6 +15,7 @@ const EMPTY_STATS: DashboardResponse["stats"] = {
   actionsByType: [],
   opportunitiesByStatus: [],
   upcomingFollowUps: [],
+  applicationsByJobboard: [],
 };
 
 async function fetchDashboard(): Promise<DashboardResponse> {

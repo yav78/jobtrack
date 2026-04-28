@@ -17,7 +17,7 @@ import {
   ensureUserUploadsDir,
 } from "@/lib/services/back/documents";
 
-export async function GET() {
+export async function GET(_req?: Request) {
   try {
     const userId = await requireUserId();
     const documents = await listDocuments(userId);

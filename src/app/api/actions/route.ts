@@ -22,6 +22,7 @@ export function actionToDto(action: {
   companyId?: string | null;
   contactId?: string | null;
   contactChannelId: string | null;
+  linkId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   contactChannel?: { id: string; value: string; label: string | null } | null;
@@ -41,6 +42,7 @@ export function actionToDto(action: {
     lastName: string;
     company?: { id: string; name: string } | null;
   } | null;
+  link?: { id: string; title: string } | null;
   documents?: Array<ActionDocumentRelation>;
 }) {
   return {
@@ -55,6 +57,7 @@ export function actionToDto(action: {
     companyId: action.companyId ?? null,
     contactId: action.contactId ?? null,
     contactChannelId: action.contactChannelId,
+    linkId: action.linkId ?? null,
     createdAt: action.createdAt.toISOString(),
     updatedAt: action.updatedAt.toISOString(),
     contactChannel: action.contactChannel
@@ -88,6 +91,7 @@ export function actionToDto(action: {
           company: action.contact.company ?? undefined,
         }
       : undefined,
+    link: action.link ? { id: action.link.id, title: action.link.title } : undefined,
     documents:
       action.documents && action.documents.length > 0
         ? action.documents.map((row) => ({
@@ -180,6 +184,7 @@ export async function POST(req: Request) {
       workOpportunityId: validatedData.workOpportunityId ?? undefined,
       companyId: validatedData.companyId ?? undefined,
       contactId: validatedData.contactId ?? undefined,
+      linkId: validatedData.linkId ?? undefined,
     });
 
     const dto = actionToDto(action);

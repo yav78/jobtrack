@@ -18,6 +18,11 @@ type DashboardStats = {
     followUpAt: string;
     isOverdue: boolean;
   }>;
+  applicationsByJobboard: Array<{
+    linkId: string | null;
+    linkTitle: string | null;
+    count: number;
+  }>;
 };
 
 export type DashboardResponse = {
