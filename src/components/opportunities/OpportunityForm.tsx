@@ -8,6 +8,7 @@ import type { CompanyDTO } from "@/lib/dto/company";
 import type { WorkOpportunityDTO } from "@/lib/dto/opportunity";
 import companyService from "@/lib/services/front/company.service";
 import opportunityService from "@/lib/services/front/opportunity.service";
+import { listJobboards } from "@/lib/services/front/jobboard.service";
 
 type Props = {
   onSuccess?: (opportunity: WorkOpportunityDTO) => void;
@@ -15,6 +16,7 @@ type Props = {
 
 export function OpportunityForm({ onSuccess }: Props) {
   const [companies, setCompanies] = useState<CompanyDTO[]>([]);
+  const [jobboards, setJobboards] = useState<Array<{ id: string; title: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [form, setForm] = useState({
@@ -22,6 +24,7 @@ export function OpportunityForm({ onSuccess }: Props) {
     description: "",
     sourceUrl: "",
     companyId: "",
+    sourceLinkId: "",
   });
 
   const loadCompanies = async () => {
@@ -31,6 +34,7 @@ export function OpportunityForm({ onSuccess }: Props) {
 
   useEffect(() => {
     loadCompanies();
+    listJobboards().then(setJobboards).catch(() => {});
   }, []);
 
   const submit = async (e: React.FormEvent) => {
@@ -42,9 +46,10 @@ export function OpportunityForm({ onSuccess }: Props) {
         description: form.description || undefined,
         sourceUrl: form.sourceUrl || undefined,
         companyId: form.companyId || undefined,
+        sourceLinkId: form.sourceLinkId || undefined,
       });
       pushToast({ type: "success", title: "Opportunité créée" });
-      setForm({ title: "", description: "", sourceUrl: "", companyId: "" });
+      setForm({ title: "", description: "", sourceUrl: "", companyId: "", sourceLinkId: "" });
       onSuccess?.(created);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -101,6 +106,30 @@ export function OpportunityForm({ onSuccess }: Props) {
         />
       </div>
       <div className="space-y-1">
+        <label className="text-sm font-medium">Vu sur (optionnel)</label>
+        <select
+          className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+          value={form.sourceLinkId}
+          onChange={(e) => setForm({ ...form, sourceLinkId: e.target.value })}
+        >
+          <option value="">Sélectionner (optionnel)</option>
+          {jobboards.map((jb) => (
+            <option key={jb.id} value={jb.id}>
+              {jb.title}
+            </option>
+          ))}
+        </select>
+        {jobboards.length === 0 && (
+          <a
+            href="/jobboards"
+            target="_blank"
+            className="text-xs text-emerald-600 hover:underline dark:text-emerald-400"
+          >
+            Ajouter un jobboard →
+          </a>
+        )}
+      </div>
+      <div className="space-y-1">
         <label className="text-sm font-medium">Description</label>
         <textarea
           className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
@@ -132,4 +161,3 @@ export function OpportunityForm({ onSuccess }: Props) {
     </>
   );
 }
-
