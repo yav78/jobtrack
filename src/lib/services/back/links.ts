@@ -17,17 +17,24 @@ export async function getLinks(
     page?: number;
     pageSize?: number;
     q?: string;
-    category?: LinkCategory;
+    category?: LinkCategory | LinkCategory[];
   }
 ) {
   const page = options?.page ?? 1;
   const pageSize = options?.pageSize ?? 20;
   const q = options?.q?.trim();
 
+  const categoryFilter: Prisma.LinkWhereInput =
+    options?.category === undefined
+      ? {}
+      : Array.isArray(options.category)
+        ? { category: { in: options.category } }
+        : { category: options.category };
+
   const where: Prisma.LinkWhereInput = {
     userId,
     ...ACTIVE,
-    ...(options?.category ? { category: options.category } : {}),
+    ...categoryFilter,
     ...(q
       ? {
           OR: [

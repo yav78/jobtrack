@@ -2,14 +2,22 @@ import { jsonCreated, jsonOk } from "@/lib/errors/response";
 import { handleRouteError, requireJson, requireUserId } from "@/lib/api-helpers";
 import { linkListQuerySchema } from "@/lib/validators/link";
 import { createLink, getLinks } from "@/lib/services/back/links";
+import type { LinkCategory } from "@prisma/client";
 
 function parseLinkListQuery(req: Request) {
   const { searchParams } = new URL(req.url);
+  const categoryValues = searchParams.getAll("category") as LinkCategory[];
+  const category =
+    categoryValues.length === 1
+      ? categoryValues[0]
+      : categoryValues.length > 1
+        ? categoryValues
+        : undefined;
   return linkListQuerySchema.parse({
     page: searchParams.get("page") ?? undefined,
     pageSize: searchParams.get("pageSize") ?? undefined,
     q: searchParams.get("q") ?? undefined,
-    category: searchParams.get("category") ?? undefined,
+    category,
   });
 }
 
