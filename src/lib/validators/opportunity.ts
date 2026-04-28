@@ -9,6 +9,7 @@ export const opportunityCreateSchema = z.object({
   sourceUrl: z.string().url().nullable().optional(),
   companyId: z.string().uuid().nullable().optional(),
   status: statusEnum.optional(),
+  sourceLinkId: z.string().uuid().nullable().optional(),
 });
 
 export const opportunityUpdateSchema = z.object({
@@ -18,4 +19,5 @@ export const opportunityUpdateSchema = z.object({
   companyId: z.string().uuid().nullable().optional(),
   status: statusEnum.optional(),
   followUpAt: z.string().datetime().nullable().optional(),
+  sourceLinkId: z.string().uuid().nullable().optional(),
 });

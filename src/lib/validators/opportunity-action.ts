@@ -25,6 +25,7 @@ export const opportunityActionCreateSchema = z.object({
   channelTypeCode: z.string().optional(),
   participantContactIds: z.array(z.string().uuid()).optional(),
   metadata: z.record(z.unknown()).optional(),
+  linkId: z.string().uuid().nullable().optional(),
 });
 
 export const opportunityActionUpdateSchema = z.object({
@@ -38,5 +39,5 @@ export const opportunityActionUpdateSchema = z.object({
   channelTypeCode: z.string().optional().nullable(),
   participantContactIds: z.array(z.string().uuid()).optional(),
   metadata: z.record(z.unknown()).optional(),
+  linkId: z.string().uuid().nullable().optional(),
 });
-

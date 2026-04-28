@@ -20,6 +20,7 @@ export type OpportunityActionDTO = {
   companyId: string | null;
   contactId: string | null;
   contactChannelId: string | null;
+  linkId: string | null;
   createdAt: string;
   updatedAt: string;
   contactChannel?: {
@@ -55,4 +56,5 @@ export type OpportunityActionDTO = {
     company?: { id: string; name: string };
   } | null;
   documents?: Array<ActionDocumentSummary>;
+  link?: { id: string; title: string } | null;
 };
