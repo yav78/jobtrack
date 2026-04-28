@@ -36,17 +36,17 @@ model ChannelType {
 }
 
 model Company {
-  id            String            @id @default(uuid()) @db.Uuid
+  id            String              @id @default(uuid()) @db.Uuid
   name          String
   typeCode      String
   website       String?
   notes         String?
-  userId        String            @db.Uuid
+  userId        String              @db.Uuid
   deletedAt     DateTime?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  companyType   CompanyType       @relation(fields: [typeCode], references: [code])
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  companyType   CompanyType         @relation(fields: [typeCode], references: [code])
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   contacts      Contact[]
   locations     Location[]
   opportunities WorkOpportunity[]
@@ -74,23 +74,23 @@ model Location {
 }
 
 model Contact {
-  id                String                     @id @default(uuid()) @db.Uuid
-  userId            String                     @db.Uuid
-  companyId         String?                    @db.Uuid
-  firstName         String
-  lastName          String
-  roleTitle         String?
-  notes             String?
-  basedAtLocationId String?                    @db.Uuid
-  deletedAt         DateTime?
-  createdAt         DateTime                   @default(now())
-  updatedAt         DateTime                   @updatedAt
-  basedAt           Location?                  @relation("ContactLocation", fields: [basedAtLocationId], references: [id])
-  user              User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  company           Company?                   @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  channels          ContactChannel[]
-  entretienLinks    EntretienContact[]
-  actionLinks       OpportunityActionContact[]
+  id                   String                     @id @default(uuid()) @db.Uuid
+  userId               String                     @db.Uuid
+  companyId            String?                    @db.Uuid
+  firstName            String
+  lastName             String
+  roleTitle            String?
+  notes                String?
+  basedAtLocationId    String?                    @db.Uuid
+  deletedAt            DateTime?
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  basedAt              Location?                  @relation("ContactLocation", fields: [basedAtLocationId], references: [id])
+  user                 User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company              Company?                   @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  channels             ContactChannel[]
+  entretienLinks       EntretienContact[]
+  actionLinks          OpportunityActionContact[]
   actionsAsMainContact OpportunityAction[]
 
   @@index([userId])
@@ -116,24 +116,27 @@ model ContactChannel {
 }
 
 model WorkOpportunity {
-  id          String                  @id @default(uuid()) @db.Uuid
-  title       String
-  description String?
-  sourceUrl   String?
-  status      WorkOpportunityStatus   @default(SOURCING)
-  followUpAt  DateTime?
-  deletedAt   DateTime?
-  companyId   String?                 @db.Uuid
-  userId      String                  @db.Uuid
-  createdAt   DateTime                @default(now())
-  updatedAt   DateTime                @updatedAt
-  entretiens  Entretien[]
-  actions     OpportunityAction[]
-  company     Company?                @relation(fields: [companyId], references: [id])
-  user        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String                @id @default(uuid()) @db.Uuid
+  title        String
+  description  String?
+  sourceUrl    String?
+  status       WorkOpportunityStatus @default(SOURCING)
+  followUpAt   DateTime?
+  deletedAt    DateTime?
+  companyId    String?               @db.Uuid
+  sourceLinkId String?               @db.Uuid
+  userId       String                @db.Uuid
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  entretiens   Entretien[]
+  actions      OpportunityAction[]
+  company      Company?              @relation(fields: [companyId], references: [id])
+  sourceLink   Link?                 @relation("OpportunitySourceLink", fields: [sourceLinkId], references: [id])
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([companyId])
+  @@index([sourceLinkId])
   @@index([status])
   @@index([followUpAt])
 }
@@ -186,6 +189,7 @@ model OpportunityAction {
   companyId         String?                    @db.Uuid
   contactId         String?                    @db.Uuid
   contactChannelId  String?                    @db.Uuid
+  linkId            String?                    @db.Uuid
   legacyEntretienId String?                    @unique
   createdAt         DateTime                   @default(now())
   updatedAt         DateTime                   @updatedAt
@@ -194,14 +198,16 @@ model OpportunityAction {
   workOpportunity   WorkOpportunity?           @relation(fields: [workOpportunityId], references: [id], onDelete: Cascade)
   company           Company?                   @relation(fields: [companyId], references: [id], onDelete: SetNull)
   contact           Contact?                   @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  link              Link?                      @relation("ActionJobboard", fields: [linkId], references: [id])
   participants      OpportunityActionContact[]
-  documents     ActionDocument[]
+  documents         ActionDocument[]
 
   @@index([userId])
   @@index([workOpportunityId])
   @@index([companyId])
   @@index([contactId])
   @@index([contactChannelId])
+  @@index([linkId])
   @@index([type, occurredAt])
   @@index([channelTypeCode])
 }
@@ -265,16 +271,18 @@ enum LinkCategory {
 }
 
 model Link {
-  id        String       @id @default(uuid()) @db.Uuid
-  userId    String       @db.Uuid
-  title     String
-  url       String
-  notes     String?
-  category  LinkCategory @default(OTHER)
-  deletedAt DateTime?
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  String              @id @default(uuid()) @db.Uuid
+  userId              String              @db.Uuid
+  title               String
+  url                 String
+  notes               String?
+  category            LinkCategory        @default(OTHER)
+  deletedAt           DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actionJobboards     OpportunityAction[] @relation("ActionJobboard")
+  sourceOpportunities WorkOpportunity[]   @relation("OpportunitySourceLink")
 
   @@index([userId])
   @@index([category])
