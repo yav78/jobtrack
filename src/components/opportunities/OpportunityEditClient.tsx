@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OpportunityEditForm } from "./OpportunityEditForm";
@@ -30,6 +30,12 @@ export function OpportunityEditClient({ opportunity: initialOpportunity }: Props
   const router = useRouter();
   const [opportunity, setOpportunity] = useState(initialOpportunity);
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (!isEditing) {
+      setOpportunity(initialOpportunity);
+    }
+  }, [initialOpportunity, isEditing]);
 
   const handleSuccess = (updatedOpportunity: WorkOpportunityDTO) => {
     setOpportunity(updatedOpportunity);

@@ -36,6 +36,7 @@ export function OpportunityActionsSection({
     } else {
       listRef.current?.addAction(action);
     }
+    listRef.current?.refresh();
   };
 
   return (

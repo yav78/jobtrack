@@ -11,6 +11,7 @@ import opportunityActionService from "@/lib/services/front/opportunity-action.se
 export type ActionsListClientHandle = {
   addAction: (action: OpportunityActionDTO) => void;
   updateAction: (action: OpportunityActionDTO) => void;
+  refresh: () => void;
 };
 
 const ACTION_TYPES: Array<{ value: OpportunityActionType; label: string }> = [
@@ -88,12 +89,29 @@ export const ActionsListClient = forwardRef<ActionsListClientHandle, Props>(func
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<string>(initialType ?? "");
 
+  const silentRefresh = async () => {
+    try {
+      const items = await opportunityActionService.listAll({
+        type: typeFilter || undefined,
+        contactId: contactId || undefined,
+        workOpportunityId: workOpportunityId || undefined,
+        companyId: companyId || undefined,
+      });
+      setActions(items);
+    } catch {
+      // keep current state on silent refresh failure
+    }
+  };
+
   useImperativeHandle(ref, () => ({
     addAction(action: OpportunityActionDTO) {
       setActions((prev) => [action, ...prev]);
     },
     updateAction(action: OpportunityActionDTO) {
       setActions((prev) => prev.map((a) => (a.id === action.id ? action : a)));
+    },
+    refresh() {
+      silentRefresh();
     },
   }));
 
