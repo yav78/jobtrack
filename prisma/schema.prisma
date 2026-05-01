@@ -49,8 +49,9 @@ model Company {
   user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   contacts      Contact[]
   locations     Location[]
-  opportunities WorkOpportunity[]
-  actions       OpportunityAction[]
+  opportunities          WorkOpportunity[]
+  actions                OpportunityAction[]
+  concernedOpportunities WorkOpportunity[] @relation("OpportunityConcernedCompany")
 
   @@unique([userId, name])
 }
@@ -124,19 +125,22 @@ model WorkOpportunity {
   followUpAt   DateTime?
   deletedAt    DateTime?
   companyId    String?               @db.Uuid
-  sourceLinkId String?               @db.Uuid
-  userId       String                @db.Uuid
+  sourceLinkId       String?               @db.Uuid
+  concernedCompanyId String?               @db.Uuid
+  userId             String                @db.Uuid
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
   entretiens   Entretien[]
   actions      OpportunityAction[]
   company      Company?              @relation(fields: [companyId], references: [id])
-  sourceLink   Link?                 @relation("OpportunitySourceLink", fields: [sourceLinkId], references: [id])
-  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceLink         Link?                 @relation("OpportunitySourceLink", fields: [sourceLinkId], references: [id])
+  concernedCompany   Company?              @relation("OpportunityConcernedCompany", fields: [concernedCompanyId], references: [id])
+  user               User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([companyId])
   @@index([sourceLinkId])
+  @@index([concernedCompanyId])
   @@index([status])
   @@index([followUpAt])
 }
