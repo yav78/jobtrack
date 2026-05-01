@@ -162,13 +162,14 @@ describe("API opportunities", () => {
       const createRes = await postOpportunity(
         makeRequest("http://localhost/api/opportunities", "POST", { title: "Mission ESN 2" })
       );
+      expect(createRes.status).toBe(201);
       const opp = await createRes.json();
 
       const patchRes = await patchOpportunity(
         makeRequest(`http://localhost/api/opportunities/${opp.id}`, "PATCH", {
           concernedCompanyId: companyId,
         }),
-        { params: Promise.resolve({ id: opp.id }) }
+        { params: { id: opp.id } as { id: string } }
       );
       expect(patchRes.status).toBe(200);
       const updated = await patchRes.json();
@@ -182,13 +183,14 @@ describe("API opportunities", () => {
           concernedCompanyId: companyId,
         })
       );
+      expect(createRes.status).toBe(201);
       const opp = await createRes.json();
 
       const patchRes = await patchOpportunity(
         makeRequest(`http://localhost/api/opportunities/${opp.id}`, "PATCH", {
           concernedCompanyId: null,
         }),
-        { params: Promise.resolve({ id: opp.id }) }
+        { params: { id: opp.id } as { id: string } }
       );
       expect(patchRes.status).toBe(200);
       const updated = await patchRes.json();
