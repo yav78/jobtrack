@@ -53,6 +53,10 @@ export default async function OpportunityDetailPage({
           name: opp.company.name,
         }
       : null,
+    concernedCompanyId: opp.concernedCompanyId ?? null,
+    concernedCompany: opp.concernedCompany
+      ? { id: opp.concernedCompany.id, name: opp.concernedCompany.name }
+      : null,
   };
 
   return (

@@ -10,6 +10,7 @@ type OpportunityUpdateInput = z.infer<typeof opportunityUpdateSchema>;
 type OpportunityWithRelations = Prisma.WorkOpportunityGetPayload<{
   include: {
     company: true;
+    concernedCompany: { select: { id: true; name: true } };
     entretiens: {
       include: { contacts: true; contactChannel: true };
     };
@@ -87,6 +88,7 @@ export async function getOpportunity(id: string, userId: string): Promise<Opport
     where: { id, userId, ...ACTIVE },
     include: {
       company: true,
+      concernedCompany: { select: { id: true, name: true } },
       entretiens: {
         include: { contacts: true, contactChannel: true },
         orderBy: { date: "desc" },

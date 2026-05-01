@@ -94,6 +94,17 @@ export function OpportunityEditClient({ opportunity: initialOpportunity }: Props
               </Link>
             </p>
           )}
+          {opportunity.concernedCompany && (
+            <p className="text-sm text-neutral-600 dark:text-neutral-300">
+              Client final :{" "}
+              <Link
+                href={`/companies/${opportunity.concernedCompany.id}`}
+                className="text-emerald-600 hover:underline dark:text-emerald-400"
+              >
+                {opportunity.concernedCompany.name}
+              </Link>
+            </p>
+          )}
           {followUpDate && (
             <p
               className={`text-sm ${
