@@ -39,6 +39,7 @@ export async function getOpportunities(
       take: pageSize,
       include: {
         company: { select: { id: true, name: true } },
+        concernedCompany: { select: { id: true, name: true } },
         sourceLink: { select: { id: true, title: true } },
       },
     }),
@@ -52,6 +53,7 @@ export async function getAllOpportunitiesForExport(userId: string) {
     where: { userId, ...ACTIVE },
     include: {
       company: { select: { id: true, name: true } },
+      concernedCompany: { select: { id: true, name: true } },
       sourceLink: { select: { id: true, title: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -64,10 +66,17 @@ export async function createOpportunity(userId: string, data: OpportunityCreateI
     const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId, ...ACTIVE } });
     if (!company) throw NotFound("Company not found");
   }
+  if (validatedData.concernedCompanyId) {
+    const company = await prisma.company.findFirst({
+      where: { id: validatedData.concernedCompanyId, userId, ...ACTIVE },
+    });
+    if (!company) throw NotFound("Concerned company not found");
+  }
   return prisma.workOpportunity.create({
     data: { ...validatedData, userId },
     include: {
       company: { select: { id: true, name: true } },
+      concernedCompany: { select: { id: true, name: true } },
       sourceLink: { select: { id: true, title: true } },
     },
   });
@@ -94,11 +103,18 @@ export async function updateOpportunity(id: string, userId: string, data: Opport
     const company = await prisma.company.findFirst({ where: { id: validatedData.companyId, userId, ...ACTIVE } });
     if (!company) throw NotFound("Company not found");
   }
+  if (validatedData.concernedCompanyId) {
+    const company = await prisma.company.findFirst({
+      where: { id: validatedData.concernedCompanyId, userId, ...ACTIVE },
+    });
+    if (!company) throw NotFound("Concerned company not found");
+  }
   return prisma.workOpportunity.update({
     where: { id, userId },
     data: validatedData,
     include: {
       company: { select: { id: true, name: true } },
+      concernedCompany: { select: { id: true, name: true } },
       sourceLink: { select: { id: true, title: true } },
     },
   });
