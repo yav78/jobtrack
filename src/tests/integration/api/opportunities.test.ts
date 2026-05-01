@@ -134,4 +134,66 @@ describe("API opportunities", () => {
       expect(patchRes.status).toBe(400);
     });
   });
+
+  describe("concernedCompanyId", () => {
+    let companyId: string;
+
+    beforeAll(async () => {
+      const company = await prisma.company.create({
+        data: { name: "Client Final SA", userId, typeCode: "CLIENT_FINAL" },
+      });
+      companyId = company.id;
+    });
+
+    it("creates opportunity with concernedCompanyId and returns concernedCompany", async () => {
+      const res = await postOpportunity(
+        makeRequest("http://localhost/api/opportunities", "POST", {
+          title: "Mission ESN",
+          concernedCompanyId: companyId,
+        })
+      );
+      expect(res.status).toBe(201);
+      const opp = await res.json();
+      expect(opp.concernedCompanyId).toBe(companyId);
+      expect(opp.concernedCompany).toMatchObject({ id: companyId, name: "Client Final SA" });
+    });
+
+    it("updates concernedCompanyId via PATCH", async () => {
+      const createRes = await postOpportunity(
+        makeRequest("http://localhost/api/opportunities", "POST", { title: "Mission ESN 2" })
+      );
+      const opp = await createRes.json();
+
+      const patchRes = await patchOpportunity(
+        makeRequest(`http://localhost/api/opportunities/${opp.id}`, "PATCH", {
+          concernedCompanyId: companyId,
+        }),
+        { params: Promise.resolve({ id: opp.id }) }
+      );
+      expect(patchRes.status).toBe(200);
+      const updated = await patchRes.json();
+      expect(updated.concernedCompany).toMatchObject({ id: companyId, name: "Client Final SA" });
+    });
+
+    it("clears concernedCompanyId by setting null", async () => {
+      const createRes = await postOpportunity(
+        makeRequest("http://localhost/api/opportunities", "POST", {
+          title: "Mission ESN 3",
+          concernedCompanyId: companyId,
+        })
+      );
+      const opp = await createRes.json();
+
+      const patchRes = await patchOpportunity(
+        makeRequest(`http://localhost/api/opportunities/${opp.id}`, "PATCH", {
+          concernedCompanyId: null,
+        }),
+        { params: Promise.resolve({ id: opp.id }) }
+      );
+      expect(patchRes.status).toBe(200);
+      const updated = await patchRes.json();
+      expect(updated.concernedCompanyId).toBeNull();
+      expect(updated.concernedCompany).toBeFalsy();
+    });
+  });
 });
