@@ -45,6 +45,7 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
     status: opportunity.status || "SOURCING",
     followUpAt: toDatetimeLocal(opportunity.followUpAt),
     sourceLinkId: opportunity.sourceLinkId || "",
+    concernedCompanyId: opportunity.concernedCompanyId || "",
   });
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
       status: opportunity.status || "SOURCING",
       followUpAt: toDatetimeLocal(opportunity.followUpAt),
       sourceLinkId: opportunity.sourceLinkId || "",
+      concernedCompanyId: opportunity.concernedCompanyId || "",
     });
   }, [opportunity]);
 
@@ -81,6 +83,7 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
         status: form.status,
         followUpAt: form.followUpAt ? new Date(form.followUpAt).toISOString() : null,
         sourceLinkId: form.sourceLinkId || null,
+        concernedCompanyId: form.concernedCompanyId || null,
       });
       pushToast({ type: "success", title: "Opportunité mise à jour" });
       onSuccess?.(data);
@@ -173,6 +176,24 @@ export function OpportunityEditForm({ opportunity, onSuccess, onCancel }: Props)
             className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
             value={form.companyId}
             onChange={(e) => setForm({ ...form, companyId: e.target.value })}
+          >
+            <option value="">Sélectionner (optionnel)</option>
+            {companies.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">
+            Client final <span className="text-neutral-400 font-normal">(optionnel)</span>
+          </label>
+          <select
+            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            value={form.concernedCompanyId}
+            onChange={(e) => setForm({ ...form, concernedCompanyId: e.target.value })}
           >
             <option value="">Sélectionner (optionnel)</option>
             {companies.map((c) => (
