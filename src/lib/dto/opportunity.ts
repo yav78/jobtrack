@@ -6,10 +6,12 @@ export type WorkOpportunityDTO = {
   status: string;
   followUpAt?: string | null;
   companyId?: string | null;
+  concernedCompanyId?: string | null;
   sourceLinkId?: string | null;
   userId: string;
   createdAt: string;
   updatedAt: string;
   company?: { id: string; name: string } | null;
+  concernedCompany?: { id: string; name: string } | null;
   sourceLink?: { id: string; title: string } | null;
 };
