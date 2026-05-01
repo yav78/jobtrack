@@ -24,6 +24,7 @@ export function OpportunityForm({ onSuccess }: Props) {
     description: "",
     sourceUrl: "",
     companyId: "",
+    concernedCompanyId: "",
     sourceLinkId: "",
   });
 
@@ -46,10 +47,11 @@ export function OpportunityForm({ onSuccess }: Props) {
         description: form.description || undefined,
         sourceUrl: form.sourceUrl || undefined,
         companyId: form.companyId || undefined,
+        concernedCompanyId: form.concernedCompanyId || undefined,
         sourceLinkId: form.sourceLinkId || undefined,
       });
       pushToast({ type: "success", title: "Opportunité créée" });
-      setForm({ title: "", description: "", sourceUrl: "", companyId: "", sourceLinkId: "" });
+      setForm({ title: "", description: "", sourceUrl: "", companyId: "", concernedCompanyId: "", sourceLinkId: "" });
       onSuccess?.(created);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -77,6 +79,23 @@ export function OpportunityForm({ onSuccess }: Props) {
             className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
             value={form.companyId}
             onChange={(e) => setForm({ ...form, companyId: e.target.value })}
+          >
+            <option value="">Sélectionner (optionnel)</option>
+            {companies.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">
+            Client final <span className="text-neutral-400 font-normal">(optionnel)</span>
+          </label>
+          <select
+            className="w-full rounded border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            value={form.concernedCompanyId}
+            onChange={(e) => setForm({ ...form, concernedCompanyId: e.target.value })}
           >
             <option value="">Sélectionner (optionnel)</option>
             {companies.map((c) => (
